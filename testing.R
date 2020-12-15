@@ -66,6 +66,7 @@ trainingData %>%
   geom_boxplot() +
   facet_wrap(~Variable, scales = "free_y")
 
+#Linear SVM
 
 crossValLinearSVM <- function(sequence, train = trainingData, val = validationData){
   
@@ -102,6 +103,13 @@ bestM <- svm(CLASS ~ ., data = trainingData, kernel = "linear", cost = bestC)
 pred <- predict(bestM, testingData)
 
 testError <- mean(pred != testingData$CLASS)
+
+#Feature Selection
+
+pca <- prcomp(trainingData[,-1])
+summary(pca)
+
+#Lots of redundant features
 
 
 
