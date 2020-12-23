@@ -2,6 +2,10 @@ library(tidyverse)
 library(e1071)
 library(ggpubr)
 library(readxl)
+library(scales)
+library(rpart)
+library(rpart.plot)
+
 
 #RICE DATA SET. Data at https://www.muratkoklu.com/datasets/ as the link to the data at 
 #https://archive.ics.uci.edu/ml/datasets/Rice+%28Cammeo+and+Osmancik%29 has no download
@@ -53,7 +57,7 @@ standardizeData <- function(data, rawTrain = rawTrainingData){
   cbind(data[,sapply(rawTrain, is.factor)], t((t(data[,!sapply(rawTrain, is.factor)]) - means)/sd))
   
 }
-
+#Standardized separately, should be the same mean and sd for all data
 trainingData <- standardizeData(rawTrainingData)
 validationData <- standardizeData(rawValidationData)
 testingData <- standardizeData(rawTestingData)
@@ -112,10 +116,92 @@ summary(pca)
 #Lots of redundant features
 
 
+#Tree
+#Default tree results in one decision node
+#Setting cp to say 0.001 does not improve classification
+
+#####
+#Code from Project 1
+cv_fold <- function(data, n_fold){
+  # fold_id denotes in which fold the observation
+  # belongs to the test set
+  data <- mutate(data, fold_id = rep_len(1:n_fold, length.out = n()))
+  # Two functions to split data into train and test sets
+  cv_train <- function(fold, data){
+    filter(data, fold_id != fold) %>% 
+      select(- fold_id)
+  }
+  cv_test <- function(fold, data){
+    filter(data, fold_id == fold) %>% 
+      select(- fold_id)
+  }
+  # Folding
+  tibble(fold = 1:n_fold) %>% 
+    mutate(train = map(fold, ~cv_train(.x, data)),
+           test = map(fold, ~cv_test(.x, data)),
+           fold = paste0("Fold", fold))
+}
+
+n <- 10
+#as.double otw can't compute mse
+riceBinary <- rice %>% mutate(CLASS = as.double(ifelse(CLASS == "Cammeo", 0, 1)))
+cvData <- cv_fold(riceBinary, n_fold = n)
+
+formula <- CLASS ~ .
+
+#cp_seq <- seq(0, 50, length.out = 50)
+cp_seq <- seq(0, 0.1, length.out = 100)
+
+modeltree_df <- cvData %>% 
+  # One row for each combination of lambda and fold
+  crossing(cp = cp_seq) %>% 
+  # Fit model to training data in each row
+  mutate(model_fit = map2(train, cp, ~rpart(formula, .x, control = rpart.control(cp = .y)), method = class),
+         # Compute predicted valuea on test data
+         predicted = map2(test, model_fit, ~predict(.y, .x)),
+         # Extract actual values from test data
+         actual = map(test, ~(model.frame(formula, .x) %>% 
+                                model.extract("response"))),
+         # Compute mse 
+         mse = map2_dbl(predicted, actual, ~mean((.x - .y)^2)))
 
 
 
+modeltree_df %>%
+  group_by(cp) %>% 
+  summarise(mse = mean(mse)) %>% 
+  ggplot(aes(x = cp, y = mse)) + 
+  geom_point() + 
+  geom_line()
+######
 
+
+bestCP <- modeltree_df$cp[which.min(modeltree_df$mse)]
+
+#Seems like the best tree is just determined by MAJORAXIS value. Reasonable but simple (boring tree).
+tree <- rpart(CLASS~., data = trainingData, method = "class")
+rpart.plot(tree)
+treepred <- predict(tree, testingData, type = "class")
+table(testingData$CLASS, treepred)
+
+treecp <- rpart(CLASS~., data = trainingData, method = "class", control = rpart.control(cp = bestCP))
+rpart.plot(treecp)
+treecppred <- predict(treecp, testingData, type = "class")
+table(testingData$CLASS, treecppred)
+
+
+
+#########################################################
+#logit model
+log.model <- glm(CLASS ~ ., data = trainingData, family = binomial(link = "logit"))
+summary(log.model)
+
+#Pairsplot colored by CLASS
+cols <- character(nrow(trainingData))
+
+cols[trainingData$CLASS == "Cammeo"] <- "deepskyblue1"
+cols[trainingData$CLASS == "Osmancik"] <- "coral2"
+pairs(trainingData[,-1], col= alpha(cols, 0.2))
 
 
 
