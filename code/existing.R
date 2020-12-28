@@ -6,25 +6,23 @@ library(scales)
 library(rpart)
 library(rpart.plot)
 
+#occupancy Dataset
 
-#RICE DATA SET. Data at https://www.muratkoklu.com/datasets/ as the link to the data at 
-#https://archive.ics.uci.edu/ml/datasets/Rice+%28Cammeo+and+Osmancik%29 has no download
+d1 <- read.delim("../data/datatraining.txt", sep = ",")
+d2 <- read.delim("../data/datatest.txt", sep = ",")
+d3 <- read.delim("../data/datatest2.txt", sep = ",")
 
-#"Citation Request :
-#CINAR, I. and KOKLU, M., (2019). “Classification of Rice Varieties Using Artificial Intelligence Methods.” International Journal of Intelligent Systems and Applications in Engineering, 7(3), 188-194.
-#DOI: https://doi.org/10.18201/ijisae.2019355381"
+occupancyData <- d1 %>% 
+  rbind(d2) %>% 
+  rbind(d3) %>% 
+  select(-date) %>% 
+  mutate(Occupancy = factor(Occupancy))
 
-
-rice <- read_xlsx("data/Rice_Osmancik_Cammeo_Dataset.xlsx") %>% 
-  mutate(CLASS = factor(CLASS))
-
-summary(rice)
-
-rice %>% 
-  gather(key = "Variable", value = "Value", -CLASS) %>% 
-  ggplot(aes(x = CLASS, y = Value, color = CLASS)) +
-    geom_boxplot() +
-    facet_wrap(~Variable, scales = "free_y")
+occupancyData %>% 
+  gather(key = "Variable", value = "Value", -Occupancy) %>% 
+  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y")
 
 #From CrossValidate package (issues with dependencies in the install so I yoinked their source code)
 balancedSplit <- function(fac, size){
@@ -37,12 +35,12 @@ balancedSplit <- function(fac, size){
   trainer
 }
 
-train <- balancedSplit(rice$CLASS, size = 0.6)
+train <- balancedSplit(occupancyData$Occupancy, size = 0.6)
 
-rawTrainingData <- rice[train,]  
-remainingData <- rice[!train,]
+rawTrainingData <- occupancyData[train,]  
+remainingData <- occupancyData[!train,]
 
-validation <- balancedSplit(remainingData$CLASS, 0.5)
+validation <- balancedSplit(remainingData$Occupancy, 0.5)
 
 rawValidationData <- remainingData[validation,]
 rawTestingData <- remainingData[!validation,]
@@ -51,12 +49,14 @@ standardizeData <- function(data, rawTrain = rawTrainingData){
   
   attr <- rawTrain[,!sapply(rawTrain, is.factor)]
   
-  means <- apply(attr, 2, mean)
+  mean <- apply(attr, 2, mean)
   sd <- apply(attr, 2, sd)
   
-  cbind(data[,sapply(rawTrain, is.factor)], t((t(data[,!sapply(rawTrain, is.factor)]) - means)/sd))
+  data.frame(Occupancy = data[,sapply(rawTrain, is.factor)]) %>% 
+    cbind(t((t(data[,!sapply(rawTrain, is.factor)]) - mean)/sd))
   
 }
+
 #Standardized separately, should be the same mean and sd for all data
 trainingData <- standardizeData(rawTrainingData)
 validationData <- standardizeData(rawValidationData)
@@ -65,8 +65,8 @@ testingData <- standardizeData(rawTestingData)
 #Looks very nice id say
 
 trainingData %>% 
-  gather(key = "Variable", value = "Value", -CLASS) %>% 
-  ggplot(aes(x = CLASS, y = Value, color = CLASS)) +
+  gather(key = "Variable", value = "Value", -Occupancy) %>% 
+  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
   geom_boxplot() +
   facet_wrap(~Variable, scales = "free_y")
 
@@ -93,7 +93,7 @@ crossValLinearSVM <- function(sequence, train = trainingData, val = validationDa
       bestCost <- C
       
     }
-  
+    
   }
   
   bestCost
@@ -144,8 +144,8 @@ cv_fold <- function(data, n_fold){
 
 n <- 10
 #as.double otw can't compute mse
-riceBinary <- rice %>% mutate(CLASS = as.double(ifelse(CLASS == "Cammeo", 0, 1)))
-cvData <- cv_fold(riceBinary, n_fold = n)
+occupancyBinary <- occupancy %>% mutate(CLASS = as.double(ifelse(CLASS == "Cammeo", 0, 1)))
+cvData <- cv_fold(occupancyBinary, n_fold = n)
 
 formula <- CLASS ~ .
 
