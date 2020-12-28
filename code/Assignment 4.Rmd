@@ -1,0 +1,91 @@
+---
+title: "Project 4"
+author: "Anton Stråhle & Max Sjödin"
+date: "28 december 2020"
+output: pdf_document
+---
+
+#Introduction
+
+This is a project for the course MT7038 which was given during the fall of 2020.
+
+#Data
+
+We picked the `Occupancy Detection` data set as we wanted to work with a binary classification problem as this would allow us to apply most of the methodologies discussed throughout the course. As there are quite a few different binary data sets at UCI we specifically chose our data set as it had a sizeable number of instances as well as  few, but intuitivley explanatory, features.
+
+##Attributes
+
+The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of about of several days. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air". 
+
+##Exploration
+
+From a quick overview we see that the data set is quite unbalanced.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+
+library(tidyverse)
+library(e1071)
+library(ggpubr)
+library(readxl)
+library(scales)
+library(rpart)
+library(rpart.plot)
+library(knitr)
+library(psych)
+
+d1 <- read.delim("../data/datatraining.txt", sep = ",")
+d2 <- read.delim("../data/datatest.txt", sep = ",")
+d3 <- read.delim("../data/datatest2.txt", sep = ",")
+
+occupancyData <- d1 %>% 
+  rbind(d2) %>% 
+  rbind(d3) %>% 
+  select(-date) %>% 
+  mutate(Occupancy = factor(Occupancy))
+
+sStats <- describeBy(occupancyData, occupancyData$Occupancy)
+
+sStats$`0` %>% 
+  kable(caption = "Unoccupied", digits = 3)
+
+sStats$`1` %>% 
+  kable(caption = "Occupied", digits = 3)
+
+```
+
+We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe inbalance we have to make sure that our training, validation and testing sets reflect this inherent property of the data. As such we decided to concatenate the three provided data sets (training, validation and testing) and split these up into balanced sets ourselves as the data providers seems to have just split the complete date by the timestamp which leads to a quite severe inbalance as a weekend is included (i.e. no Occupied observations for two days).
+
+We also chose to standardize to allow for better performance of scale dependent classifiers, e.g. kNN or SVM. As some of the features include some very major deviations as can be seen in the figure below this choice to not standardize would surely impact the performance of these classifiers negativley.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+
+occupancyData %>% 
+  gather(key = "Variable", value = "Value", -Occupancy) %>% 
+  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y")
+
+```
+
+As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights of when they leave. This features solely dominates the others when it comes to classification and is ,at least according to us, quite boring. As such we'll choose to excluded it which will be discussed under **Analysis** in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights off?*.
+
+#Methodology
+
+As we're dealing with a binary classification problem there are some major routes that we decided to test out. Those being SVM, KNN, Decision Trees and Logistic Regression. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
+
+
+#TÄNKER ATT VI SKRIVER VARFÖR METODERNA ÄR RIMLIGA OCH DÄREFTER GÅR IGENOM KORT VAD VI FÅR FÖR BROAD RESULTS (ALLTSÅ INNAN VI FÖRFINAR MODELLERNA). SEN SKRIVER VI OM EN/TVÅ BÄSTA UNDRER ANALYSIS DÄR VI GÖR DJUPGÅENDE ANALYS TYP.
+
+##SVM
+
+##KNN
+
+##Decions Trees
+
+##Logistic Regression
+
+#Analysis
+
+#Bibliography
+
+#Appendix

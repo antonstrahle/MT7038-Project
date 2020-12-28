@@ -7,7 +7,7 @@ valKNN <- function(k, train = trainingData, val = validationData){
   
   table <- table(m, val[,sapply(val, is.factor)])
   
-  #print(table)
+  print(table)
   
   print(paste("Validation Error:", round(1-sum(diag(table))/sum(table), digit = 3), "for k =", k))
   
