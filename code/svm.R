@@ -1,4 +1,4 @@
-source("anton.R")
+source("data.R")
 
 #SVM
 
