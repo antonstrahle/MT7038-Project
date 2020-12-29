@@ -199,8 +199,8 @@ summary(log.model)
 #Pairsplot colored by CLASS
 cols <- character(nrow(trainingData))
 
-cols[trainingData$CLASS == "Cammeo"] <- "deepskyblue1"
-cols[trainingData$CLASS == "Osmancik"] <- "coral2"
+cols[trainingData$Occupancy == "Cammeo"] <- "deepskyblue1"
+cols[trainingData$Occupanc == "Osmancik"] <- "coral2"
 pairs(trainingData[,-1], col= alpha(cols, 0.2))
 
 

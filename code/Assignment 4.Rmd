@@ -3,11 +3,12 @@ title: "Project 4"
 author: "Anton Stråhle & Max Sjödin"
 date: "28 december 2020"
 output: pdf_document
+geometry: margin=1cm
 ---
 
 #Introduction
 
-This is a project for the course MT7038 which was given during the fall of 2020.
+This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification on a granular level and then proceed with a more in depth analysis and discussion for those that seem to perform best. The methods that we will initially test  are SVM, KNN and Decision Trees.
 
 #Data
 
@@ -32,6 +33,7 @@ library(rpart)
 library(rpart.plot)
 library(knitr)
 library(psych)
+library()
 
 d1 <- read.delim("../data/datatraining.txt", sep = ",")
 d2 <- read.delim("../data/datatest.txt", sep = ",")
@@ -55,6 +57,8 @@ sStats$`1` %>%
 
 We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe inbalance we have to make sure that our training, validation and testing sets reflect this inherent property of the data. As such we decided to concatenate the three provided data sets (training, validation and testing) and split these up into balanced sets ourselves as the data providers seems to have just split the complete date by the timestamp which leads to a quite severe inbalance as a weekend is included (i.e. no Occupied observations for two days).
 
+Beyond the poor splitting of the data into training, validation and testing we found not obvious inconsitensies in the data that needed addressing.
+
 We also chose to standardize to allow for better performance of scale dependent classifiers, e.g. kNN or SVM. As some of the features include some very major deviations as can be seen in the figure below this choice to not standardize would surely impact the performance of these classifiers negativley.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
@@ -67,22 +71,105 @@ occupancyData %>%
 
 ```
 
-As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights of when they leave. This features solely dominates the others when it comes to classification and is ,at least according to us, quite boring. As such we'll choose to excluded it which will be discussed under **Analysis** in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights off?*.
+As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights of when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
+
+As the `HumidityRatio` can be derived from `Humidity` and `Temperature` we examine the remaining three features.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+
+pData <- occupancyData %>% 
+  select(-Light, -HumidityRatio)
+
+cols <- character(nrow(pData))
+
+cols[as.numeric(as.character(pData$Occupancy)) == 0] <- "deepskyblue1"
+cols[as.numeric(as.character(pData$Occupancy)) == 1] <- "coral2"
+
+pairs(pData[,-4], col = scales::alpha(cols, 0.2))
+
+```
+
+As we can see in the figure above the remaining features seem to behave quite nicely, although some could be considered to be somewhat correlated (e.g. `Humidity` and `CO2`). There seem to be some quite nice divisions of the occupancy status within the different features which should make adequate classification quite easy.
 
 #Methodology
 
-As we're dealing with a binary classification problem there are some major routes that we decided to test out. Those being SVM, KNN, Decision Trees and Logistic Regression. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
-
+As we're dealing with a binary classification problem there are some major routes that we decided to test out. Those being SVM, KNN and Decision Trees. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
 
 #TÄNKER ATT VI SKRIVER VARFÖR METODERNA ÄR RIMLIGA OCH DÄREFTER GÅR IGENOM KORT VAD VI FÅR FÖR BROAD RESULTS (ALLTSÅ INNAN VI FÖRFINAR MODELLERNA). SEN SKRIVER VI OM EN/TVÅ BÄSTA UNDRER ANALYSIS DÄR VI GÖR DJUPGÅENDE ANALYS TYP.
 
 ##SVM
 
+In Figure X above we noted that we seem to have non-linear data which should make the usage of certain SVM kernels useful in terms of classification.
+
+###Implementation
+
+We examine three different kernels, a linear kernel, a radial kernel as well as a polynomial kernel. We use our aforementioned validation set in order to tune our cost $C$ as well as the degree for our polynomial kernel. Using the package `e1071` and the function `svm` we attained the following results for the three scenarios.
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE, cache = TRUE}
+
+source("svm.R")
+
+#Linear
+
+bestLC <- valLinearSVM(10^seq(-2, 2, by = 0.5))
+
+l <- svm(Occupancy ~ ., data = trainingData, kernel = "linear", C = bestLC)
+predL <- predict(l, testingData)
+lAcc <- mean(predL == testingData$Occupancy)
+
+#Radial
+
+bestRC <- valRadialSVM(10^seq(-2, 3, by = 0.5))
+
+r <- svm(Occupancy ~ ., data = trainingData, kernel = "radial", C = bestRC)
+predR <- predict(r, testingData)
+rAcc <- mean(predR == testingData$Occupancy)
+
+#Polynomial
+
+bestP <- valPolynomialSVM(10^seq(-2, 3, by = 0.5), deg = seq(2,5), coeff = 1)
+
+p <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", C = bestP$C, degree = bestP$D, coef0 = 1)
+predP <- predict(p, testingData)
+pAcc <- mean(predP == testingData$Occupancy)
+
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+
+data.frame(Kernel = c("Linear", "Radial", paste("Pylynomial degree", bestP$D)),
+           Cost = c(bestLC, bestRC, bestP$C),
+           TestAccuracy = c(lAcc, rAcc, pAcc)) %>% 
+  kable(caption = "SVM Test Accuracies", digits = 3)
+
+```
+
+With a very coarse parameter search (grid search for the polynomial kernel) we achieved the results above. Thelinear kernel performs quite a bit worse than the radial and cubic polynomial kernels which further supports the idea that the data is in fact quite non-linear. 
+
 ##KNN
 
-##Decions Trees
+As noted previously the data seems to be quite non-linear and as KNN in a good non-linear classifier it should hopefully work well. Furthermore as KNN scales well with data we should hopefully be able to achieve quite good results given the size of our training set (approximatley 12000 observations).
 
-##Logistic Regression
+###Implementation
+
+Using the package `Class` and the function `knn` we do a coarse search using our validation set for a good $k$. 
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+
+source("knn.R")
+
+bestK <- valKNN(1:50)
+
+k <- knn(trainingData[, !sapply(trainingData, is.factor)], testingData[, !sapply(testingData, is.factor)], 
+         cl = trainingData[,sapply(trainingData, is.factor)], k = bestK)
+
+kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
+
+```
+
+
+
+##Decions Trees
 
 #Analysis
 

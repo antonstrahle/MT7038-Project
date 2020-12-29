@@ -58,31 +58,37 @@ valRadialSVM <- function(sequence, train = trainingData, val = validationData){
   
 }
 
-valPolynomialSVM <- function(sequence, deg, coeff, train = trainingData, val = validationData){
+valPolynomialSVM <- function(C, deg, coeff, train = trainingData, val = validationData){
   
   bestCost <- 0
+  bestDeg <- 0
   bestValError <- 1
   
-  for(C in sequence){
+  for(d in deg){  
     
-    m <- svm(Occupancy ~ ., data = train, kernel = "polynomial", cost = C, degree = deg, coef0 = coeff)
-    pred <- predict(m, val)
+    for(c in C){
     
-    valError <- mean(pred != val$Occupancy)
-    
-    #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
-    print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
-    
-    if(valError < bestValError){
+      m <- svm(Occupancy ~ ., data = train, kernel = "polynomial", cost = c, degree = d, coef0 = coeff)
+      pred <- predict(m, val)
       
-      bestValError <- valError
-      bestCost <- C
+      valError <- mean(pred != val$Occupancy)
+      
+      #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", c)) 
+      print(paste("Validation Error:", round(valError, 4), "for C:", c, "and D:", d)) 
+      
+      if(valError < bestValError){
+        
+        bestValError <- valError
+        bestCost <- c
+        bestDeg <- d
+        
+      }
       
     }
-    
+  
   }
   
-  bestCost
+  list("C" = bestCost, "D" = bestDeg)
   
 }
 

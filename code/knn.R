@@ -1,24 +1,28 @@
 source("data.R")
 library(class)
 
-valKNN <- function(k, train = trainingData, val = validationData){
+valKNN <- function(K, train = trainingData, val = validationData){
   
-  m <- knn(train[, !sapply(train, is.factor)], val[, !sapply(val, is.factor)], cl = train[,sapply(train, is.factor)], k = k) 
+  bestK <- 0
+  bestError <- 1
   
-  table <- table(m, val[,sapply(val, is.factor)])
+  for(k in K){
   
-  print(table)
+    m <- knn(train[, !sapply(train, is.factor)], val[, !sapply(val, is.factor)], cl = train[,sapply(train, is.factor)], k = k) 
+    
+    valError <- mean(val[, sapply(val, is.factor)] != m)
+    
+    print(paste("Validation Error:", round(valError, digits = 3), "for k =", k))
+    
+    if(valError < bestError){
+      
+      bestK <- k
+      
+    }
   
-  print(paste("Validation Error:", round(1-sum(diag(table))/sum(table), digit = 3), "for k =", k))
+  }
   
+  bestK
+    
 }
 
-for(k in 1:50){
-  
-  valKNN(k)
-  
-}
-
-valKNN(k = 1, val = testingData)
-
-#1-nn seems to be working very well due to lack of noise in the data
