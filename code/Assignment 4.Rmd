@@ -33,6 +33,7 @@ library(rpart)
 library(rpart.plot)
 library(knitr)
 library(psych)
+library(ipred)
 library()
 
 d1 <- read.delim("../data/datatraining.txt", sep = ",")
@@ -127,7 +128,7 @@ rAcc <- mean(predR == testingData$Occupancy)
 
 #Polynomial
 
-bestP <- valPolynomialSVM(10^seq(-2, 3, by = 0.5), deg = seq(2,5), coeff = 1)
+bestP <- valPolynomialSVM(10^seq(-2, 3, by = 0.5), deg = seq(2,3), coeff = 1)
 
 p <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", C = bestP$C, degree = bestP$D, coef0 = 1)
 predP <- predict(p, testingData)
@@ -168,8 +169,25 @@ kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
 ```
 
 
-
 ##Decions Trees
+
+Using decision trees is a good idea since we have non-linear data and a simple binary classification problem. We look at bagging and boosting algorithms and conclude that bagging resulted in lower misclassification error. 
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+formula <- Occupancy ~ .
+#Bagging
+bagged <- ipred::bagging(formula, data = trainingData, nbagg = 1000, coob = TRUE)
+#Out-of-bag error
+print(bagged)
+
+bagpred <- predict(bagged, newdata = testingData)
+
+train.error <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.character(testingData$Occupancy)))^2))
+
+```
+Drawing $1000$ bootstrap samples resulted in an out-of-bag estimate of misclassification error of $0.0179$.
+
+
 
 #Analysis
 
