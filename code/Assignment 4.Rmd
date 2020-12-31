@@ -34,7 +34,6 @@ library(rpart.plot)
 library(knitr)
 library(psych)
 library(ipred)
-library()
 
 d1 <- read.delim("../data/datatraining.txt", sep = ",")
 d2 <- read.delim("../data/datatest.txt", sep = ",")
@@ -96,8 +95,6 @@ As we can see in the figure above the remaining features seem to behave quite ni
 
 As we're dealing with a binary classification problem there are some major routes that we decided to test out. Those being SVM, KNN and Decision Trees. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
 
-#TÄNKER ATT VI SKRIVER VARFÖR METODERNA ÄR RIMLIGA OCH DÄREFTER GÅR IGENOM KORT VAD VI FÅR FÖR BROAD RESULTS (ALLTSÅ INNAN VI FÖRFINAR MODELLERNA). SEN SKRIVER VI OM EN/TVÅ BÄSTA UNDRER ANALYSIS DÄR VI GÖR DJUPGÅENDE ANALYS TYP.
-
 ##SVM
 
 In Figure X above we noted that we seem to have non-linear data which should make the usage of certain SVM kernels useful in terms of classification.
@@ -145,7 +142,7 @@ data.frame(Kernel = c("Linear", "Radial", paste("Pylynomial degree", bestP$D)),
 
 ```
 
-With a very coarse parameter search (grid search for the polynomial kernel) we achieved the results above. Thelinear kernel performs quite a bit worse than the radial and cubic polynomial kernels which further supports the idea that the data is in fact quite non-linear. 
+With a very coarse parameter search (grid search for the polynomial kernel) we achieved the results above. The linear kernel performs quite a bit worse than the radial and cubic polynomial kernels which further supports the idea that the data is in fact quite non-linear. 
 
 ##KNN
 
@@ -169,6 +166,9 @@ kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
 ```
 
 
+The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremley well with a test accuracy of `r kAcc`, is a 1-NN this strongly indicates that our data is not very noisy at all, meaning that we should be able to achieve very high accuracies in one way or another.
+
+
 ##Decions Trees
 
 Using decision trees is a good idea since we have non-linear data and a simple binary classification problem. We look at bagging and boosting algorithms and conclude that bagging resulted in lower misclassification error. 
@@ -182,11 +182,10 @@ print(bagged)
 
 bagpred <- predict(bagged, newdata = testingData)
 
-train.error <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.character(testingData$Occupancy)))^2))
+testError <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.character(testingData$Occupancy)))^2))
 
 ```
-Drawing $1000$ bootstrap samples resulted in an out-of-bag estimate of misclassification error of $0.0179$.
-
+Drawing $1000$ bootstrap samples resulted in an out-of-bag estimate of misclassification error of `r testError` and thus a test accuracy of `r 1-testError` which greatly exceeds the other methods examined.
 
 
 #Analysis
