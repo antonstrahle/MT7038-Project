@@ -16,7 +16,7 @@ We picked the `Occupancy Detection` data set as we wanted to work with a binary 
 
 ## Attributes
 
-The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of about of several days. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air". 
+The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of a few weeks. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air". 
 
 ## Exploration
 
@@ -34,6 +34,8 @@ library(rpart.plot)
 library(knitr)
 library(psych)
 library(ipred)
+library(adabag)
+library(gbm)
 
 d1 <- read.delim("../data/datatraining.txt", sep = ",")
 d2 <- read.delim("../data/datatest.txt", sep = ",")
@@ -71,9 +73,9 @@ occupancyData %>%
 
 ```
 
-As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights of when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
+As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights off when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
 
-As the `HumidityRatio` can be derived from `Humidity` and `Temperature` we examine the remaining three features.
+As the `HumidityRatio` can be derived from `Humidity` and `Temperature` we exclude it from further analysis and examine the remaining three features.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -85,7 +87,7 @@ cols <- character(nrow(pData))
 cols[as.numeric(as.character(pData$Occupancy)) == 0] <- "deepskyblue1"
 cols[as.numeric(as.character(pData$Occupancy)) == 1] <- "coral2"
 
-pairs(pData[,-4], col = scales::alpha(cols, 0.2))
+pairs(pData[,-4], col = scales::alpha(cols, 0.2), main = "Figure 1: Correlation between features")
 
 ```
 
@@ -171,21 +173,47 @@ The value of $k$ which generates the best validation accuracy turns out to be 1.
 
 ## Decions Trees
 
-Using decision trees is a good idea since we have non-linear data and a simple binary classification problem. We look at bagging and boosting algorithms and conclude that bagging resulted in lower misclassification error. 
+Using decision trees is a good idea since we have non-linear data and a simple binary classification problem. 
 
-```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+### Implementation
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
 formula <- Occupancy ~ .
+
+#Basic decision tree
+tree <- rpart(formula, data = trainingData, method = "class")
+treepred <- predict(tree, testingData, type = "class")
+testErrorTree <- mean(sqrt((as.numeric(as.character(treepred)) - as.numeric(as.character(testingData$Occupancy)))^2))
+
+```
+
+Constructing a simple decision tree resulted in a test accuracy of `r 1-testErrorTree`. This is can be further optimized by implementing bagging and boosting algorithms. Using the package `ipred` for bagging and the package `adabag` for boosting we attained the following results.
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+
 #Bagging
 bagged <- ipred::bagging(formula, data = trainingData, nbagg = 1000, coob = TRUE)
 #Out-of-bag error
-print(bagged)
 
 bagpred <- predict(bagged, newdata = testingData)
 
-testError <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.character(testingData$Occupancy)))^2))
+testErrorBag <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.character(testingData$Occupancy)))^2))
+
+#Boosting
+#Boosting 1000 trees resulted in long computation time
+boosttree <- boosting(formula, data = trainingData, boos = TRUE, mfinal = 100)
+
+boostpred <- predict.boosting(boosttree, newdata = testingData)
+
+testErrorBoost <- boostpred$error
+
+data.frame(Method = c("Simple", "Bagging", "Boosting"),
+           'Test Error' = c(1-testErrorTree, 1-testErrorBag, 1-testErrorBoost)) %>% 
+  kable(caption = "Decision tree Test Accuracies", digits = 3)
 
 ```
-Drawing $1000$ bootstrap samples resulted in an out-of-bag estimate of misclassification error of `r testError` and thus a test accuracy of `r 1-testError` which greatly exceeds the other methods examined.
+
+When bagging trees we draw $1000$ bootstrap samples and which resulted in the high test accuracy of `r 1-testErrorBag` displayed in Table 4.
 
 
 # Analysis

@@ -10,6 +10,9 @@ formula <- Occupancy ~ .
 tree <- rpart(formula, data = trainingData, method = "class")
 rpart.plot(tree)
 treepred <- predict(tree, testingData, type = "class")
+
+testErrorTree <- mean(sqrt((as.numeric(as.character(treepred)) - as.numeric(as.character(testingData$Occupancy)))^2))
+
 table(testingData$Occupancy, treepred)
 
 
@@ -25,7 +28,7 @@ train.error <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.char
 
 #Boosting
 #boosting function not found
-boosttree <- boosting(formula, data = trainingData, boos = TRUE, mfinal = 1000)
+boosttree <- boosting(formula, data = trainingData, boos = TRUE, mfinal = 100)
 
 boostpred <- predict.boosting(boosttree, newdata = testingData)
 
