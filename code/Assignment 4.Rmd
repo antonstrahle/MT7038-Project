@@ -6,19 +6,19 @@ output: pdf_document
 geometry: margin=1cm
 ---
 
-#Introduction
+# Introduction
 
 This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification on a granular level and then proceed with a more in depth analysis and discussion for those that seem to perform best. The methods that we will initially test  are SVM, KNN and Decision Trees.
 
-#Data
+# Data
 
 We picked the `Occupancy Detection` data set as we wanted to work with a binary classification problem as this would allow us to apply most of the methodologies discussed throughout the course. As there are quite a few different binary data sets at UCI we specifically chose our data set as it had a sizeable number of instances as well as  few, but intuitivley explanatory, features.
 
-##Attributes
+## Attributes
 
 The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of about of several days. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air". 
 
-##Exploration
+## Exploration
 
 From a quick overview we see that the data set is quite unbalanced.
 
@@ -91,15 +91,15 @@ pairs(pData[,-4], col = scales::alpha(cols, 0.2))
 
 As we can see in the figure above the remaining features seem to behave quite nicely, although some could be considered to be somewhat correlated (e.g. `Humidity` and `CO2`). There seem to be some quite nice divisions of the occupancy status within the different features which should make adequate classification quite easy.
 
-#Methodology
+# Methodology
 
 As we're dealing with a binary classification problem there are some major routes that we decided to test out. Those being SVM, KNN and Decision Trees. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
 
-##SVM
+## SVM
 
 In Figure X above we noted that we seem to have non-linear data which should make the usage of certain SVM kernels useful in terms of classification.
 
-###Implementation
+### Implementation
 
 We examine three different kernels, a linear kernel, a radial kernel as well as a polynomial kernel. We use our aforementioned validation set in order to tune our cost $C$ as well as the degree for our polynomial kernel. Using the package `e1071` and the function `svm` we attained the following results for the three scenarios.
 
@@ -144,11 +144,11 @@ data.frame(Kernel = c("Linear", "Radial", paste("Pylynomial degree", bestP$D)),
 
 With a very coarse parameter search (grid search for the polynomial kernel) we achieved the results above. The linear kernel performs quite a bit worse than the radial and cubic polynomial kernels which further supports the idea that the data is in fact quite non-linear. 
 
-##KNN
+## KNN
 
 As noted previously the data seems to be quite non-linear and as KNN in a good non-linear classifier it should hopefully work well. Furthermore as KNN scales well with data we should hopefully be able to achieve quite good results given the size of our training set (approximatley 12000 observations).
 
-###Implementation
+### Implementation
 
 Using the package `Class` and the function `knn` we do a coarse search using our validation set for a good $k$. 
 
@@ -169,7 +169,7 @@ kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
 The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremley well with a test accuracy of `r kAcc`, is a 1-NN this strongly indicates that our data is not very noisy at all, meaning that we should be able to achieve very high accuracies in one way or another.
 
 
-##Decions Trees
+## Decions Trees
 
 Using decision trees is a good idea since we have non-linear data and a simple binary classification problem. We look at bagging and boosting algorithms and conclude that bagging resulted in lower misclassification error. 
 
@@ -188,8 +188,8 @@ testError <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.charac
 Drawing $1000$ bootstrap samples resulted in an out-of-bag estimate of misclassification error of `r testError` and thus a test accuracy of `r 1-testError` which greatly exceeds the other methods examined.
 
 
-#Analysis
+# Analysis
 
-#Bibliography
+# Bibliography
 
-#Appendix
+# Appendix
