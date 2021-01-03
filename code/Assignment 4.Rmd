@@ -202,7 +202,9 @@ testErrorTree <- mean(sqrt((as.numeric(as.character(treepred)) - as.numeric(as.c
 ```
 
 Constructing a simple decision tree resulted in a test accuracy of `r 1-testErrorTree`. This is can be further optimized by implementing bagging and boosting algorithms. 
+
 Bagging procedures draw a predetermined number of bootstrap samples each fitting a model. The models outputted predictions are averaged and gives the resulting bagged estimate for each observation. 
+
 Boosting procedures train the classifier by weighting each observation based on its classification, placing more weight on observations incorrectly classified. The next iteration of the procedure focuses more on those previously misclassified observations to better classify the training data.
 Using the package `ipred` for bagging and the package `adabag` for boosting we attained the following results.
 

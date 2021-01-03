@@ -17,3 +17,10 @@ rpart.plot
 knitr
 psych
 ipred
+lattice
+caret
+foreach
+iterators
+doParallel
+adabag
+gbm
