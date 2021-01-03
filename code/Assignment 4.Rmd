@@ -37,6 +37,8 @@ library(ipred)
 library(adabag)
 library(gbm)
 
+set.seed(2021) #Happy New Year
+
 d1 <- read.delim("../data/datatraining.txt", sep = ",")
 d2 <- read.delim("../data/datatest.txt", sep = ",")
 d3 <- read.delim("../data/datatest2.txt", sep = ",")
@@ -95,15 +97,16 @@ As we can see in the figure above the remaining features seem to behave quite ni
 
 # Methodology
 
-As we're dealing with a binary classification problem there are some major routes that we decided to test out. Those being SVM, KNN and Decision Trees. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
+As we're dealing with a binary classification problem there are some different methods that we’ve decided to test out. The methods which we have chosen are SVM, KNN and Decision Trees. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
 
 ## SVM
 
-In Figure X above we noted that we seem to have non-linear data which should make the usage of certain SVM kernels useful in terms of classification.
+As support vector machines are widely used in classification (SOURCE) it seems appropriate to apply the method to this problem. In Figure 2 above we note that we seem to have non-linear data which suggest that either a polynomial or a radial kernel should work well, or at least better than a linear kernel.
 
 ### Implementation
 
-We examine three different kernels, a linear kernel, a radial kernel as well as a polynomial kernel. We use our aforementioned validation set in order to tune our cost $C$ as well as the degree for our polynomial kernel. Using the package `e1071` and the function `svm` we attained the following results for the three scenarios.
+We examine three different kernels, a linear kernel, a radial kernel as well as a polynomial kernel. We use our aforementioned validation set in order to perform a coarse-to-fine parameter search for the cost $C$ and the degree for the polynomial kernel (in the case of the polynomial kernel we use a grid coarse grid search and then a finer search for the best degree). Using the package `e1071` and the function `svm` we attained the following results for the three scenarios.
+
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE, cache = TRUE}
 
@@ -119,7 +122,7 @@ lAcc <- mean(predL == testingData$Occupancy)
 
 #Radial
 
-bestRC <- valRadialSVM(10^seq(-2, 3, by = 0.5))
+bestRC <- valRadialSVM(10^seq(-2, 5, by = 0.5))
 
 r <- svm(Occupancy ~ ., data = trainingData, kernel = "radial", C = bestRC)
 predR <- predict(r, testingData)
@@ -135,6 +138,12 @@ pAcc <- mean(predP == testingData$Occupancy)
 
 ```
 
+For the linear kernel we only resort to a coarse parameter search as it's performance is not going to be able to match that of the polynomial or the radial kernel (and since the validation error is the same did not change much over the costs examined ($\{10^{i}\}_{i=-2}^3$).
+
+For the polynomial kernel we encountered some computational difficulties when tuning our paremeters. As such we were only able to efficiently test up until degree 3. We did note an increase in the validation accuracy when increasing both the degree and the cost. This seems to indicate that the data lacks a lot of noise as we seem to favor a low bias, but high variance, classifier which we obtain by using such a high cost. 
+
+For the radial kernel we had similar findings as we did for the polynomial kernel. We achieved higher validation accuracies by increasing the cost (this increase did however slow down eventually) which prompted us to once again disregard the finer part of the parameter search in order to simply examine higher costs.
+
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 
 data.frame(Kernel = c("Linear", "Radial", paste("Pylynomial degree", bestP$D)),
@@ -144,15 +153,13 @@ data.frame(Kernel = c("Linear", "Radial", paste("Pylynomial degree", bestP$D)),
 
 ```
 
-With a very coarse parameter search (grid search for the polynomial kernel) we achieved the results above. The linear kernel performs quite a bit worse than the radial and cubic polynomial kernels which further supports the idea that the data is in fact quite non-linear. 
-
 ## KNN
 
-As noted previously the data seems to be quite non-linear and as KNN in a good non-linear classifier it should hopefully work well. Furthermore as KNN scales well with data we should hopefully be able to achieve quite good results given the size of our training set (approximatley 12000 observations).
+As noted previously the data seems to be quite non-linear and as KNN in a good non-linear classifier (SOURCE). As noted when examining the SVMs in the previous section we seem to favor low bias classifiers due to an inherent lack of noise in our data set which should inidcate that we want a smaller $k$. Furthermore as KNN scales well with data we should hopefully be able to achieve quite good results given the size of our training set (approximatley 12000 observations).
 
 ### Implementation
 
-Using the package `Class` and the function `knn` we do a coarse search using our validation set for a good $k$. 
+Using the package `Class` and the function `knn` we do a parameter search using our validation set for a good $k$ on $(1,...,50)$. 
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
 
@@ -167,9 +174,16 @@ kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
 
 ```
 
+The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremley well with a test accuracy of `r kAcc` is a 1-NN, this strongly indicates that our data is not very noisy at all (which we also noted when examining the SVMs). 
 
-The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremley well with a test accuracy of `r kAcc`, is a 1-NN this strongly indicates that our data is not very noisy at all, meaning that we should be able to achieve very high accuracies in one way or another.
+A possible way to enhance the nearest neighbour model is through weighting (SOURCE BOOK). A simple weighting scheme would be to weight data points by their distance to the new point we want to classify. Given that we seem to have a lack of noise this might lead to an optimal weighting scheme that heavily favors points close by (which would somewhat resemble a 1-NN).
 
+```{r echo = FASLE, message = FALSE, warning = FALSE}
+
+```
+
+
+As the 1-NN performs well on its own it seems questionable to  
 
 ## Decions Trees
 
@@ -215,8 +229,7 @@ data.frame(Method = c("Simple", "Bagging", "Boosting"),
 
 When bagging trees we draw $1000$ bootstrap samples and which resulted in the high test accuracy of `r 1-testErrorBag` displayed in Table 4.
 
-
-# Analysis
+# Discussion
 
 # Bibliography
 
