@@ -78,12 +78,12 @@ occupancyData %>%
 
 As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights off when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
 
-As the `HumidityRatio` can be derived from `Humidity` and `Temperature` we exclude it from further analysis and examine the remaining three features.
+As the `HumidityRatio` can be derived from `Humidity` and `Temperature` we exclude it from the correlation plot below.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
 pData <- occupancyData %>% 
-  select(-Light, -HumidityRatio)
+  select(-Light)
 
 cols <- character(nrow(pData))
 
@@ -236,14 +236,27 @@ boostpred <- predict.boosting(boosttree, newdata = testingData)
 testErrorBoost <- boostpred$error
 
 data.frame(Method = c("Simple", "Bagging", "Boosting"),
-           'Test Error' = c(1-testErrorTree, 1-testErrorBag, 1-testErrorBoost)) %>% 
-  kable(caption = "Decision tree Test Accuracies", digits = 3)
+           'Test Accuracy' = c(1-testErrorTree, 1-testErrorBag, 1-testErrorBoost)) %>% 
+  kable(caption = "Decision Trees", digits = 3)
 
 ```
 
 In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting.
 
 # Discussion
+
+The different methods which we've examined throughout this project yield the following results when each of them have been tuned (although to different degrees).
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+
+data.frame(Method = c("Bagging", paste0("Weighted ", bestK, "-NN"), "Radial SVM"),
+           'Accuracy' = c(1-testErrorBag, wkAcc, rAcc)) %>% 
+  arrange(desc(Accuracy)) %>% 
+  kable(caption = "Final Test Accuracies", digits = 3)
+
+```
+
+It should be mentioned here that we have chose the best methods from the three different sections based on their test accuracy. As such we can say that they perform the best in their respective category but we cannot compare them against each other (in order to do this we would need another unused data set) as the methods have been selected due to performing well on the test data after validation. As we have not created a fourth data set we will not be drawing any conclussions in reagrds to which model is actually superior, however, one would assume that it would most likely not the be support vector approach.
 
 Bagging Thought:
 Trees are unstable models that are easy to interpret. When bagging trees this interpretability is unfortunately lost since a bagged tree no longer is a tree. (The Elements of Statistical Learning, second edition, s. 286)
