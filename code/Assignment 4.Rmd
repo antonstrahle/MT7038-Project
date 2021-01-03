@@ -175,13 +175,13 @@ kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
 
 ```
 
-The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremley well with a test accuracy of `r kAcc` is a 1-NN, this strongly indicates that our data is not very noisy at all (which we also noted when examining the SVMs). 
+The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremely well with a test accuracy of `r kAcc` is a 1-NN, this strongly indicates that our data is not very noisy at all (which we also noted when examining the SVMs). 
 
 A possible way to enhance the nearest neighbour model is through weighting (SOURCE BOOK). A simple weighting scheme would be to weight the k nearest neighbours by their distance to the new point we want to classify, as such we give further emphesis to neightbours closer to the point which we wish to classify. 
 
-In order to implement this weighting scheme we use the `kknn` package and the included function with the same name which uses kernel-difference weighting. The package allows for the usage of many different kernels but the results that they produce do not differ enough to justify an inclussion of all of them. As such we use the so called *Epanechnikov* kernel as it is one which we've encountered before.  
+In order to implement this weighting scheme we use the `kknn` package and the included function with the same name which uses kernel-difference weighting. The package allows for the usage of many different kernels but the results that they produce do not differ enough to justify an inclusion of all of them. As such we use the so called *Epanechnikov* kernel as it is one which we've encountered before.  
 
-```{r echo = FASLE, message = FALSE, warning = FALSE}
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
 source("wknn.R")
 
 bestK <- valWKNN(1:25)
@@ -192,7 +192,7 @@ wkAcc <- mean(testingData[, sapply(testingData, is.factor)] == wk$fitted.values)
 
 ```
 
-When using weighting we actually use `r bestK` neghbours instead of only one, this also leads to a much higher accuracy as well.
+When using weighting we actually use `r bestK` neighbours instead of only one, this also leads to a much higher accuracy as well at `r wkAcc`.
 
 ## Decions Trees
 
@@ -241,7 +241,7 @@ data.frame(Method = c("Simple", "Bagging", "Boosting"),
 
 ```
 
-When bagging trees we draw $1000$ bootstrap samples and which resulted in the high test accuracy of `r 1-testErrorBag` displayed in Table 4.
+In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting.
 
 # Discussion
 
