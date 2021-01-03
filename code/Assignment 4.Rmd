@@ -241,7 +241,7 @@ data.frame(Method = c("Simple", "Bagging", "Boosting"),
 
 ```
 
-In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting.
+In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting. Although bagging resulted in the highest Test Accuracy we loose the interpretability of the tree based structure, since a bagged tree no longer is a tree (The Elements of Statistical Learning, second edition, s. 286). If interpretability is valued, the boosting procedure is worth considering despite the lower Test Accuracy.
 
 # Discussion
 
@@ -256,10 +256,6 @@ data.frame(Method = c("Bagging", paste0("Weighted ", bestK, "-NN"), "Radial SVM"
 
 ```
 
-It should be mentioned here that we have chose the best methods from the three different sections based on their test accuracy. As such we can say that they perform the best in their respective category but we cannot compare them against each other (in order to do this we would need another unused data set) as the methods have been selected due to performing well on the test data after validation. As we have not created a fourth data set we will not be drawing any conclussions in reagrds to which model is actually superior, however, one would assume that it would most likely not the be support vector approach.
-
-Bagging Thought:
-Trees are unstable models that are easy to interpret. When bagging trees this interpretability is unfortunately lost since a bagged tree no longer is a tree. (The Elements of Statistical Learning, second edition, s. 286)
 
 # Bibliography
 
