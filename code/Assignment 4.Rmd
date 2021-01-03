@@ -201,7 +201,10 @@ testErrorTree <- mean(sqrt((as.numeric(as.character(treepred)) - as.numeric(as.c
 
 ```
 
-Constructing a simple decision tree resulted in a test accuracy of `r 1-testErrorTree`. This is can be further optimized by implementing bagging and boosting algorithms. Using the package `ipred` for bagging and the package `adabag` for boosting we attained the following results.
+Constructing a simple decision tree resulted in a test accuracy of `r 1-testErrorTree`. This is can be further optimized by implementing bagging and boosting algorithms. 
+Bagging procedures draw a predetermined number of bootstrap samples each fitting a model. The models outputted predictions are averaged and gives the resulting bagged estimate for each observation. 
+Boosting procedures train the classifier by weighting each observation based on its classification, placing more weight on observations incorrectly classified. The next iteration of the procedure focuses more on those previously misclassified observations to better classify the training data.
+Using the package `ipred` for bagging and the package `adabag` for boosting we attained the following results.
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -215,7 +218,7 @@ testErrorBag <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.cha
 
 #Boosting
 #Boosting 1000 trees resulted in long computation time
-boosttree <- boosting(formula, data = trainingData, boos = TRUE, mfinal = 100)
+boosttree <- boosting(formula, data = trainingData, mfinal = 100)
 
 boostpred <- predict.boosting(boosttree, newdata = testingData)
 
@@ -230,6 +233,10 @@ data.frame(Method = c("Simple", "Bagging", "Boosting"),
 When bagging trees we draw $1000$ bootstrap samples and which resulted in the high test accuracy of `r 1-testErrorBag` displayed in Table 4.
 
 # Discussion
+
+Bagging Thought:
+Trees are unstable models that are easy to interpret. When bagging trees this interpretability is unfortunately lost since a bagged tree no longer is a tree. (The Elements of Statistical Learning, second edition, s. 286)
+
 
 # Bibliography
 
