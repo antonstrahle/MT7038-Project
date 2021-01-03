@@ -90,7 +90,7 @@ cols <- character(nrow(pData))
 cols[as.numeric(as.character(pData$Occupancy)) == 0] <- "deepskyblue1"
 cols[as.numeric(as.character(pData$Occupancy)) == 1] <- "coral2"
 
-pairs(pData[,-4], col = scales::alpha(cols, 0.2), main = "Figure 1: Correlation between features")
+pairs(pData[,-5], col = scales::alpha(cols, 0.2), main = "Figure 1: Correlation between features")
 
 ```
 
@@ -255,6 +255,8 @@ data.frame(Method = c("Bagging", paste0("Weighted ", bestK, "-NN"), "Radial SVM"
   kable(caption = "Final Test Accuracies", digits = 3)
 
 ```
+
+From Table 5 we see that 
 
 
 # Bibliography
