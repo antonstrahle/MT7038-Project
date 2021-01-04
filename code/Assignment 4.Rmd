@@ -140,7 +140,7 @@ rAcc <- mean(predR == testingData$Occupancy)
 
 #Polynomial
 
-bestP <- valPolynomialSVM(10^seq(-2, 3, by = 0.5), deg = seq(2,3), coeff = 1)
+bestP <- valPolynomialSVM(10^seq(-2, 5, by = 0.5), deg = seq(2,3), coeff = 1)
 
 p <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", C = bestP$C, degree = bestP$D, coef0 = 1)
 predP <- predict(p, testingData)
@@ -156,7 +156,7 @@ For the radial kernel we had similar findings as we did for the polynomial kerne
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 
-data.frame(Kernel = c("Linear", "Radial", paste("Pylynomial degree", bestP$D)),
+data.frame(Kernel = c("Linear", "Radial", paste("Polynomial degree", bestP$D)),
            Cost = c(bestLC, bestRC, bestP$C),
            TestAccuracy = c(lAcc, rAcc, pAcc)) %>% 
   kable(caption = "SVM Test Accuracies", digits = 3)
