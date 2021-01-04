@@ -37,6 +37,8 @@ library(ipred)
 library(adabag)
 library(gbm)
 library(kknn)
+library(grid)
+library(gridExtra)
 
 set.seed(2021) #Happy New Year
 
@@ -66,14 +68,23 @@ Beyond the poor splitting of the data into training, validation and testing we f
 
 We also chose to standardize to allow for better performance of scale dependent classifiers, e.g. kNN or SVM. As some of the features include some very major deviations as can be seen in the figure below this choice to not standardize would surely impact the performance of these classifiers negativley.
 
-```{r echo = FALSE, warning = FALSE, message = FALSE}
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width=13}
 
 occupancyData %>% 
   gather(key = "Variable", value = "Value", -Occupancy) %>% 
   ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
   geom_boxplot() +
-  facet_wrap(~Variable, scales = "free_y")
+  facet_wrap(~Variable, scales = "free_y") +
+  theme(legend.position = "none") -> p1
 
+as.data.frame(occupancyData) %>%
+  mutate_if(is.numeric, scale) %>% 
+  gather(key = "Variable", value = "Value", -Occupancy) %>% 
+  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y") -> p2
+
+grid.arrange(p1, p2, ncol = 2)
 ```
 
 As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights off when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
@@ -88,7 +99,7 @@ cols <- character(nrow(pData))
 cols[as.numeric(as.character(pData$Occupancy)) == 0] <- "deepskyblue1"
 cols[as.numeric(as.character(pData$Occupancy)) == 1] <- "coral2"
 
-pairs(pData[,-5], col = scales::alpha(cols, 0.2), main = "Figure 1: Correlation between features")
+pairs(pData[,-5], col = scales::alpha(cols, 0.2), main = "Figure 2: Correlation between features")
 
 ```
 
@@ -260,3 +271,240 @@ Bagging decision trees resulted in the highest test accuracy, closely followed b
 # Bibliography
 
 # Appendix
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+
+```
+
+
+```{r echo=TRUE, eval=FALSE}
+#svm.R
+source("data.R")
+
+
+
+valLinearSVM <- function(sequence, train = trainingData, val = validationData){
+  
+  bestCost <- 0
+  bestValError <- 1
+  
+  for(C in sequence){
+    
+    m <- svm(Occupancy ~ ., data = train, kernel = "linear", cost = C)
+    pred <- predict(m, val)
+    
+    valError <- mean(pred != val$Occupancy)
+    
+    #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
+    print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
+    
+    if(valError < bestValError){
+      
+      bestValError <- valError
+      bestCost <- C
+      
+    }
+    
+  }
+  
+  bestCost
+  
+}
+
+valRadialSVM <- function(sequence, train = trainingData, val = validationData){
+  
+  bestCost <- 0
+  bestValError <- 1
+  
+  for(C in sequence){
+    
+    m <- svm(Occupancy ~ ., data = train, kernel = "radial", cost = C)
+    pred <- predict(m, val)
+    
+    valError <- mean(pred != val$Occupancy)
+    
+    #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
+    print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
+    
+    if(valError < bestValError){
+      
+      bestValError <- valError
+      bestCost <- C
+      
+    }
+    
+  }
+  
+  bestCost
+  
+}
+
+valPolynomialSVM <- function(C, deg, coeff, train = trainingData, val = validationData){
+  
+  bestCost <- 0
+  bestDeg <- 0
+  bestValError <- 1
+  
+  for(d in deg){  
+    
+    for(c in C){
+    
+      m <- svm(Occupancy ~ ., data = train, kernel = "polynomial", cost = c, degree = d, coef0 = coeff)
+      pred <- predict(m, val)
+      
+      valError <- mean(pred != val$Occupancy)
+      
+      #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", c)) 
+      print(paste("Validation Error:", round(valError, 4), "for C:", c, "and D:", d)) 
+      
+      if(valError < bestValError){
+        
+        bestValError <- valError
+        bestCost <- c
+        bestDeg <- d
+        
+      }
+      
+    }
+  
+  }
+  
+  list("C" = bestCost, "D" = bestDeg)
+  
+}
+```
+
+```{r echo=TRUE, eval=FALSE}
+#knn.R
+source("data.R")
+library(class)
+
+valKNN <- function(K, train = trainingData, val = validationData){
+  
+  bestK <- 0
+  bestError <- 1
+  
+  for(k in K){
+  
+    m <- knn(train[, !sapply(train, is.factor)], val[, !sapply(val, is.factor)], cl = train[,sapply(train, is.factor)], k = k) 
+    
+    valError <- mean(val[, sapply(val, is.factor)] != m)
+    
+    print(paste("Validation Error:", round(valError, digits = 3), "for k =", k))
+    
+    if(valError < bestError){
+      
+      bestK <- k
+      
+    }
+  
+  }
+  
+  bestK
+    
+}
+
+```
+
+```{r echo=TRUE, eval=FALSE}
+#wknn.R
+source("data.r")
+library(kknn)
+
+valWKNN <- function(K, kernel = "epanechnikov", train = trainingData, val = validationData){
+  
+  bestK <- 0
+  bestError <- 1
+  
+  for(k in K){
+    
+    m <- kknn(Occupancy ~ ., train = train, test = val, kernel = kernel, k = k) 
+    
+    valError <- mean(val[, sapply(val, is.factor)] != m$fitted.values)
+    
+    print(paste("Validation Error:", round(valError, digits = 3), "for k =", k))
+    
+    if(valError < bestError){
+      
+      bestK <- k
+      
+    }
+    
+  }
+  
+  bestK
+  
+}
+
+```
+
+```{r echo=TRUE, eval=FALSE}
+#data.R
+library(tidyverse)
+library(e1071)
+library(ggpubr)
+library(readxl)
+library(scales)
+library(rpart)
+library(rpart.plot)
+
+#occupancy Dataset
+
+d1 <- read.delim("../data/datatraining.txt", sep = ",")
+d2 <- read.delim("../data/datatest.txt", sep = ",")
+d3 <- read.delim("../data/datatest2.txt", sep = ",")
+
+occupancyData <- d1 %>% 
+  rbind(d2) %>% 
+  rbind(d3) %>% 
+  select(-date) %>% 
+  mutate(Occupancy = factor(Occupancy)) %>% 
+  select(-Light)
+
+#From CrossValidate package (issues with dependencies in the install so I yoinked their source code)
+balancedSplit <- function(fac, size){
+  trainer <- rep(FALSE, length(fac))
+  for(lev in levels(fac)){
+    N <- sum(fac==lev)
+    wanted <- max(1, trunc(N*size))
+    trainer[fac==lev][sample(N, wanted)] <- TRUE
+  }
+  trainer
+}
+
+train <- balancedSplit(occupancyData$Occupancy, size = 0.6)
+
+rawTrainingData <- occupancyData[train,]  
+remainingData <- occupancyData[!train,]
+
+validation <- balancedSplit(remainingData$Occupancy, 0.5)
+
+rawValidationData <- remainingData[validation,]
+rawTestingData <- remainingData[!validation,]
+
+standardizeData <- function(data, rawTrain = rawTrainingData){
+  
+  attr <- rawTrain[,!sapply(rawTrain, is.factor)]
+  
+  mean <- apply(attr, 2, mean)
+  sd <- apply(attr, 2, sd)
+  
+  data.frame(Occupancy = data[,sapply(rawTrain, is.factor)]) %>% 
+    cbind(t((t(data[,!sapply(rawTrain, is.factor)]) - mean)/sd))
+  
+}
+
+#Standardized separately, should be the same mean and sd for all data
+trainingData <- standardizeData(rawTrainingData)
+validationData <- standardizeData(rawValidationData)
+testingData <- standardizeData(rawTestingData)
+
+#Looks very nice id say
+
+trainingData %>% 
+  gather(key = "Variable", value = "Value", -Occupancy) %>% 
+  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
+  geom_boxplot() +
+  facet_wrap(~Variable, scales = "free_y")
+
+```

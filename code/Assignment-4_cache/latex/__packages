@@ -24,3 +24,6 @@ iterators
 doParallel
 adabag
 gbm
+kknn
+kableExtra
+class
