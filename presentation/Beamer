@@ -1,0 +1,137 @@
+\documentclass[a4paper,10pt]{beamer}
+\usepackage{amsmath}
+\usepackage{bbm}
+\usepackage{soul}
+\usepackage{caption}
+
+\definecolor{darkred}{rgb}{0.8,0,0}
+\setbeamercolor*{item}{fg=darkred}
+\DeclareCaptionFont{dr}{\color{darkred}}
+\captionsetup{labelfont={dr}}
+
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{\begin{beamercolorbox}[wd=.4\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm plus1fill,rightskip=.3cm]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.6\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle\hfill\insertframenumber\,/\,\inserttotalframenumber
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+\usecolortheme{beaver}
+
+%opening
+\title{Occupancy Detection}
+\subtitle{MT7038}
+\author{Anton Str\aa hle \& Max Sj\"odin}
+\date{Fall 2020}	
+	
+\newcommand{\SubItem}[1]{
+    {\setlength\itemindent{15pt} \item[\color{darkred}$\rhd$] #1}
+}
+
+\newcommand{\SubSubItem}[1]{
+    {\setlength\itemindent{30pt} \item[\color{darkred}$\rhd$] #1}
+}	
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Data}
+	The occupancy status of a room was observed for a few days. Snapshots of the  features below were taken every minute.
+	\begin{itemize}
+		\item Features - Numerical 
+			\SubItem{Temperature} 
+			\SubItem{CO2} 
+			\SubItem{Humidity} 
+			\SubItem{HumidityRatio} 
+			\SubItem{Light} 
+		\item Labels - Binary
+			\SubItem{Occupancy} 
+				\SubSubItem{Occupied} 
+				\SubSubItem{Unoccupied}
+	\end{itemize}	
+\end{frame}
+
+\begin{frame}[noframenumbering]{Data}
+	The occupancy status of a room was observed for a few days. Snapshots of the  features below were taken every minute.
+	\begin{itemize}
+		\item Features
+			\SubItem{Temperature} 
+			\SubItem{CO2} 
+			\SubItem{Humidity} 
+			\SubItem{HumidityRatio } 
+			\SubItem{\st{Light}} 
+		\item Response
+			\SubItem{Occupancy}
+				\SubSubItem{Occupied} 
+				\SubSubItem{Unoccupied}
+	\end{itemize}
+	Light is excluded as the best classifier would otherwise become \textit{Are the lights on?}
+\end{frame}
+
+\begin{frame}{Brief Exploration}
+	\begin{itemize}
+		\item Unbalanced data set 
+		\SubItem{Many more unoccupied data points than occupied}
+	\end{itemize}
+	\begin{figure}
+		\includegraphics[width=\linewidth]{pairs.png}
+		\caption{Pairplots of Features}
+	\end{figure}
+	\begin{itemize}
+		\item Non-linearity?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Brief Exploration}
+	\begin{figure}
+		\includegraphics[width=\linewidth]{boxplot.png}
+		\caption{Boxplots of Features}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Methodology}
+	\begin{itemize}
+		\item SVM 
+		\item KNN
+		\item Decision Trees
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Methodology}{SVM}
+    \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for non-linear classification problems.\par 
+    \medskip
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Using the package \textbf{e1071} and the function \textbf{svm}\par
+    \makebox[1cm]{}  {\color{darkred}$\rhd$} Linear, polynomial and radial kernels\par
+    \makebox[1cm]{}   {\color{darkred}$\rhd$} Coarse-to-fine parameter search
+	\begin{figure}
+		\includegraphics[width=\linewidth]{boxplot.png}
+		\caption{SVM Accuracies}
+	\end{figure}
+	\makebox[1cm]{Thoughts?} {\color{darkred}$\rhd$} High costs $\implies$ favoring low bias and perhaps an underlying lack of noise.
+\end{frame}
+
+\begin{frame}{Methodology}{KNN}
+	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for non-linear classification problems\par 
+	\makebox[1cm]{} {\color{darkred}$\rhd$} Good with large training data sets \par
+	\makebox[1cm]{} {\color{darkred}$\rhd$} Good if data is not noisy\par
+    \medskip
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Regular KNN using the package \textbf{class} and the function \textbf{knn} \par
+	\makebox[1cm]{} {\color{darkred}$\rhd$} Weighted KNN using the package \textbf{kknn} and the function \textbf{kknn}
+\end{frame}
+
+\begin{frame}{Methodology}{Decision Trees}
+	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} WHY???\par 
+	\makebox[1cm]{} {\color{darkred}$\rhd$} WHY MORE? \par
+    \medskip
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} HOW? \par
+    \makebox[1cm]{} {\color{darkred}$\rhd$} HOW MORE?
+\end{frame}
+
+\end{document}
