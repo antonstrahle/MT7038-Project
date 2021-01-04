@@ -78,8 +78,6 @@ occupancyData %>%
 
 As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights off when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
 
-As the `HumidityRatio` can be derived from `Humidity` and `Temperature` we exclude it from the correlation plot below.
-
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
 pData <- occupancyData %>% 
@@ -139,7 +137,7 @@ pAcc <- mean(predP == testingData$Occupancy)
 
 ```
 
-For the linear kernel we only resort to a coarse parameter search as it's performance is not going to be able to match that of the polynomial or the radial kernel (and since the validation error is the same did not change much over the costs examined ($\{10^{i}\}_{i=-2}^3$).
+For the linear kernel we only resort to a coarse parameter search as it's performance is not going to be able to match that of the polynomial or the radial kernel (and since the validation error is the same it did not change much over the costs examined ($\{10^{i}\}_{i=-2}^3$).
 
 For the polynomial kernel we encountered some computational difficulties when tuning our paremeters. As such we were only able to efficiently test up until degree 3. We did note an increase in the validation accuracy when increasing both the degree and the cost. This seems to indicate that the data lacks a lot of noise as we seem to favor a low bias, but high variance, classifier which we obtain by using such a high cost. 
 
@@ -241,7 +239,7 @@ data.frame(Method = c("Simple", "Bagging", "Boosting"),
 
 ```
 
-In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting. Although bagging resulted in the highest Test Accuracy we loose the interpretability of the tree based structure, since a bagged tree no longer is a tree (The Elements of Statistical Learning, second edition, s. 286). If interpretability is valued, the boosting procedure is worth considering despite the lower Test Accuracy.
+In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. For boosting, iteration over $1000$ trees led to long computational time and did not change the result significantly. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting. Although bagging resulted in the highest Test Accuracy we loose the interpretability of the tree based structure, since a bagged tree no longer is a tree (The Elements of Statistical Learning, second edition, s. 286). If interpretability is valued, the boosting procedure is worth considering despite the lower Test Accuracy.
 
 # Discussion
 
@@ -256,7 +254,7 @@ data.frame(Method = c("Bagging", paste0("Weighted ", bestK, "-NN"), "Radial SVM"
 
 ```
 
-From Table 5 we see that 
+Bagging decision trees resulted in the highest test accuracy, closely followed by the weighted `r bestK`-NN.
 
 
 # Bibliography
