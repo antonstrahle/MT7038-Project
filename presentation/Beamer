@@ -149,11 +149,11 @@ When search for a good value of $k$ in this case we found that the best validati
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees}
-	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} WHY???\par 
-	\makebox[1cm]{} {\color{darkred}$\rhd$} WHY MORE? \par
+	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good with non-linear data\par 
+	\makebox[1cm]{} {\color{darkred}$\rhd$} Good with binary classification \par
     \medskip
-    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} HOW BAG/BOOST? \par
-    \makebox[1cm]{} {\color{darkred}$\rhd$} HOW MORE?
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$}Bagging using the package \textbf{ipred} using function \textbf{bagging} \par
+    \makebox[1cm]{} {\color{darkred}$\rhd$} Boosting using the package \textbf{adabag} using function \textbf{boosting}
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees - Single}
