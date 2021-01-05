@@ -161,7 +161,7 @@ When search for a good value of $k$ in this case we found that the best validati
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees - Single}
-Training a single decision tree resulted in the high test accuracy of $xxx$. This in itself is a strong classifier but it can be further optimized using the aforementioned methods called bagging and boosting.
+Training a single decision tree resulted in the high test accuracy of $0.92$. This in itself is a strong classifier but it can be further optimized using the aforementioned methods called bagging and boosting.
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees - Bagging}
@@ -177,7 +177,6 @@ Boosting algorithms iterate over a number of trees and for each iteration weight
 \begin{frame}{Discussion}
 TABLE OF ALL TREES AND IMORTANT THINGS FOUND EARLIER(MODEL TEST ACCURACIES)
 
-We concluded that bagging of decision trees resulted in the highest test accuracy out of the models tested. SOMETHING ABOUT THE LOW BIAS OF TREES AND THE VARIANCE REDUCTION OF BAGGING.
 \end{frame}
 
 \end{document}
