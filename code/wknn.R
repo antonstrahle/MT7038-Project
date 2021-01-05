@@ -1,7 +1,7 @@
 source("data.r")
 library(kknn)
 
-valWKNN <- function(K, kernel = "epanechnikov", train = trainingData, val = validationData){
+valWKNN <- function(K, kernel = "gaussian", train = trainingData, val = validationData){
   
   bestK <- 0
   bestError <- 1
