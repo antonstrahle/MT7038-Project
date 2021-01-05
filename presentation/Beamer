@@ -154,24 +154,29 @@ When search for a good value of $k$ in this case we found that the best validati
 	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good with non-linear data\par 
 	\makebox[1cm]{} {\color{darkred}$\rhd$} Good with binary classification \par
     \medskip
-    \makebox[1cm]{How?}  {\color{darkred}$\rhd$}Bagging using the package \textbf{ipred} using function \textbf{bagging} \par
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$}Simple decision tree using package \textbf{rpart} using function \textbf{rpart} \par
+    \makebox[1cm]{} {\color{darkred}$\rhd$} Bagging using the package \textbf{ipred} using function \textbf{bagging} \par
     \makebox[1cm]{} {\color{darkred}$\rhd$} Boosting using the package \textbf{adabag} using function \textbf{boosting}
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees - Single}
-
+Training a single decision tree resulted in the high test accuracy of $xxx$. This in itself is a strong classifier but it can be further optimized using the aforementioned methods called bagging and boosting.
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees - Bagging}
-
+Bagging algorithms create $B$ bootstrap samples, each samples is fitted by a decision tree. These trees are then averaged to create the so-called bagged tree. 
+$$\hat{f}_bag(x)=\frac{1}{B}\sum_{b=1}^B \hat{f^{*b}}(x)$$
+The bagged tree however is no longer a tree. This unfortunately means that the interpretability of the decision tree is lost.
 \end{frame}
 
 \begin{frame}{Methodology}{Decision Trees - Boosting}
-
+Boosting algorithms iterate over a number of trees and for each iteration weight all observations. Correctly classified observations recieve less weight and incorrectly classified observations recieve more weight. This results in each iteration concentrating more and more on the incorreclty classified observations
 \end{frame}
 
 \begin{frame}{Discussion}
+TABLE OF ALL TREES AND IMORTANT THINGS FOUND EARLIER(MODEL TEST ACCURACIES)
 
+We concluded that bagging of decision trees resulted in the highest test accuracy out of the models tested. SOMETHING ABOUT THE LOW BIAS OF TREES AND THE VARIANCE REDUCTION OF BAGGING.
 \end{frame}
 
 \end{document}

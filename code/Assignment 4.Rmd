@@ -265,7 +265,7 @@ data.frame(Method = c("Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM
 
 ```
 
-Bagging decision trees resulted in the highest test accuracy, closely followed by the weighted `r bestK`-NN.
+Bagging decision trees resulted in the highest test accuracy, closely followed by the weighted `r bestWK`-NN.
 
 
 # Bibliography
