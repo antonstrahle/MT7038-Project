@@ -45,17 +45,19 @@
 \begin{frame}{Data}
 	The occupancy status of a room was observed for a few days. Snapshots of the  features below were taken every minute.
 	\begin{itemize}
-		\item Features - Numerical 
+		\item Features
 			\SubItem{Temperature} 
 			\SubItem{CO2} 
 			\SubItem{Humidity} 
 			\SubItem{HumidityRatio} 
 			\SubItem{Light} 
-		\item Labels - Binary
+		\item Response
 			\SubItem{Occupancy} 
 				\SubSubItem{Occupied} 
 				\SubSubItem{Unoccupied}
 	\end{itemize}	
+	~\\
+	~\\
 \end{frame}
 
 \begin{frame}[noframenumbering]{Data}
