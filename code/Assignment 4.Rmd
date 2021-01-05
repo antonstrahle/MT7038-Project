@@ -263,6 +263,10 @@ data.frame(Method = c("Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM
   arrange(desc(Accuracy)) %>% 
   kable(caption = "Final Test Accuracies", digits = 3)
 
+data.frame(Method = c("Simple","Boosting","Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM","Linear SVM", paste("Polynomial degree", bestP$D)),
+           'Accuracy' = c(1-testErrorTree, 1-testErrorBoost,1-testErrorBag, wkAcc, rAcc, lAcc, pAcc)) %>% 
+  arrange(desc(Accuracy)) %>% 
+  kable(caption = "Final Test Accuracies", digits = 3)
 ```
 
 Bagging decision trees resulted in the highest test accuracy, closely followed by the weighted `r bestWK`-NN.
