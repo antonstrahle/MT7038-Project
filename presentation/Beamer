@@ -116,10 +116,11 @@
     \makebox[1cm]{}  {\color{darkred}$\rhd$} Linear, polynomial and radial kernels\par
     \makebox[1cm]{}   {\color{darkred}$\rhd$} Coarse-to-fine parameter search
 	\begin{figure}
-		\includegraphics[width=\linewidth]{boxplot.png}
+		\includegraphics[width=0.5\linewidth]{svmAccuracies.png}
 		\caption{SVM Accuracies}
 	\end{figure}
-	\makebox[1cm]{Thoughts?} {\color{darkred}$\rhd$} High costs $\implies$ favoring low bias and perhaps an underlying lack of noise.
+	\makebox[1cm]{Thoughts?} \quad {\color{darkred}$\rhd$} High costs $\implies$ favoring low bias and perhaps an underlying \par 
+	\makebox[4.255cm]{} lack of noise.
 \end{frame}
 
 \begin{frame}{Methodology}{KNN}
@@ -146,7 +147,7 @@ In order to weight our data points we use the kernel distance from the point we 
 
 \medskip
 
-When search for a good value of $k$ in this case we found that the best validation accuracy was obtained for $k = 25$ which seems a bit more stable than using a 1-NN. This was also reflected in the testing accuracy which turned out to be $97.5\%$.
+When search for a good value of $k$ in this case we found that the best validation accuracy was obtained for $k = 5$ which seems a bit more stable than using a 1-NN. This was also reflected in the testing accuracy which turned out to be $98.4\%$.
 
 \end{frame}
 
@@ -154,7 +155,7 @@ When search for a good value of $k$ in this case we found that the best validati
 	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good with non-linear data\par 
 	\makebox[1cm]{} {\color{darkred}$\rhd$} Good with binary classification \par
     \medskip
-    \makebox[1cm]{How?}  {\color{darkred}$\rhd$}Simple decision tree using package \textbf{rpart} using function \textbf{rpart} \par
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Simple decision trees using package \textbf{rpart} using function \textbf{rpart} \par
     \makebox[1cm]{} {\color{darkred}$\rhd$} Bagging using the package \textbf{ipred} using function \textbf{bagging} \par
     \makebox[1cm]{} {\color{darkred}$\rhd$} Boosting using the package \textbf{adabag} using function \textbf{boosting}
 \end{frame}
@@ -165,7 +166,7 @@ Training a single decision tree resulted in the high test accuracy of $xxx$. Thi
 
 \begin{frame}{Methodology}{Decision Trees - Bagging}
 Bagging algorithms create $B$ bootstrap samples, each samples is fitted by a decision tree. These trees are then averaged to create the so-called bagged tree. 
-$$\hat{f}_bag(x)=\frac{1}{B}\sum_{b=1}^B \hat{f^{*b}}(x)$$
+$$\hat{f}_{\text{bag}}(x)=\frac{1}{B}\sum_{b=1}^B \hat{f}^{*}_b(x)$$
 The bagged tree however is no longer a tree. This unfortunately means that the interpretability of the decision tree is lost.
 \end{frame}
 
