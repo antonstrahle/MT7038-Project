@@ -17,6 +17,7 @@ valWKNN <- function(K, kernel = "epanechnikov", train = trainingData, val = vali
     if(valError < bestError){
       
       bestK <- k
+      bestError <- valError
       
     }
     

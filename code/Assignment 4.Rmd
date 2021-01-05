@@ -140,7 +140,7 @@ rAcc <- mean(predR == testingData$Occupancy)
 
 #Polynomial
 
-bestP <- valPolynomialSVM(10^seq(-2, 5, by = 0.5), deg = seq(2,3), coeff = 1)
+bestP <- valPolynomialSVM(10^seq(-2, 5, by = 0.5), deg = seq(2,5), coeff = 1)
 
 p <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", C = bestP$C, degree = bestP$D, coef0 = 1)
 predP <- predict(p, testingData)
@@ -150,7 +150,7 @@ pAcc <- mean(predP == testingData$Occupancy)
 
 For the linear kernel we only resort to a coarse parameter search as it's performance is not going to be able to match that of the polynomial or the radial kernel (and since the validation error is the same it did not change much over the costs examined ($\{10^{i}\}_{i=-2}^3$).
 
-For the polynomial kernel we encountered some computational difficulties when tuning our paremeters. As such we were only able to efficiently test up until degree 3. We did note an increase in the validation accuracy when increasing both the degree and the cost. This seems to indicate that the data lacks a lot of noise as we seem to favor a low bias, but high variance, classifier which we obtain by using such a high cost. 
+For the polynomial kernel we encountered some computational difficulties (the optimizer did not converge within the iteration limit of the `e1071`) when tuning our paremeters. As such we were only able to efficiently test up until degree 5. We did note an increase in the validation accuracy when increasing both the degree and the cost. This seems to indicate that the data lacks a lot of noise as we seem to favor a low bias, but high variance, classifier which we obtain by using such a high cost. 
 
 For the radial kernel we had similar findings as we did for the polynomial kernel. We achieved higher validation accuracies by increasing the cost (this increase did however slow down eventually) which prompted us to once again disregard the finer part of the parameter search in order to simply examine higher costs.
 
@@ -175,7 +175,7 @@ Using the package `Class` and the function `knn` we do a parameter search using 
 
 source("knn.R")
 
-bestK <- valKNN(1:50)
+bestK <- valKNN(1:25)
 
 k <- knn(trainingData[, !sapply(trainingData, is.factor)], testingData[, !sapply(testingData, is.factor)], 
          cl = trainingData[,sapply(trainingData, is.factor)], k = bestK)
@@ -193,15 +193,15 @@ In order to implement this weighting scheme we use the `kknn` package and the in
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
 source("wknn.R")
 
-bestK <- valWKNN(1:25)
+bestWK <- valWKNN(1:50)
 
-wk <- kknn(Occupancy ~ ., train = trainingData, test = testingData, kernel = "epanechnikov", k = bestK) 
+wk <- kknn(Occupancy ~ ., train = trainingData, test = testingData, kernel = "epanechnikov", k = bestWK) 
     
 wkAcc <- mean(testingData[, sapply(testingData, is.factor)] == wk$fitted.values)
 
 ```
 
-When using weighting we actually use `r bestK` neighbours instead of only one, this also leads to a much higher accuracy as well at `r wkAcc`.
+When using weighting we actually use `r bestWK` neighbours instead of only one, this also leads to a much higher accuracy as well at `r wkAcc`.
 
 ## Decions Trees
 
@@ -258,7 +258,7 @@ The different methods which we've examined throughout this project yield the fol
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
-data.frame(Method = c("Bagging", paste0("Weighted ", bestK, "-NN"), "Radial SVM"),
+data.frame(Method = c("Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM"),
            'Accuracy' = c(1-testErrorBag, wkAcc, rAcc)) %>% 
   arrange(desc(Accuracy)) %>% 
   kable(caption = "Final Test Accuracies", digits = 3)
@@ -395,6 +395,7 @@ valKNN <- function(K, train = trainingData, val = validationData){
     if(valError < bestError){
       
       bestK <- k
+      bestError <- valError
       
     }
   
@@ -427,6 +428,7 @@ valWKNN <- function(K, kernel = "epanechnikov", train = trainingData, val = vali
     if(valError < bestError){
       
       bestK <- k
+      bestError <- valError
       
     }
     

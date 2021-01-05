@@ -17,6 +17,7 @@ valKNN <- function(K, train = trainingData, val = validationData){
     if(valError < bestError){
       
       bestK <- k
+      bestError <- valError
       
     }
   
