@@ -295,8 +295,8 @@ lRidge %>%
   geom_point() +
   scale_x_log10() +
   ylab("Error on Validation Set") +
-  xlab(expression(c)) +
-  ggtitle("Ridge regression: Coarse-to-fine for Lambda")
+  xlab(expression(lambda)) +
+  ggtitle("Ridge regression: Coarse for Lambda")
 
 lLasso %>% 
   ggplot(aes(x = l, y = error)) +
@@ -304,8 +304,8 @@ lLasso %>%
   geom_point() +
   scale_x_log10() +
   ylab("Error on Validation Set") +
-  xlab(expression(c)) +
-  ggtitle("Lasso regression: Coarse-to-fine for Lambda")
+  xlab(expression(lambda)) +
+  ggtitle("Lasso regression: Coarse for Lambda")
 ```
 
 ## Code
