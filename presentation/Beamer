@@ -60,6 +60,13 @@
 	~\\
 \end{frame}
 
+\begin{frame}{Data}
+	\begin{figure}
+		\includegraphics[width=\linewidth]{boxplot.png}
+		\caption{Boxplots of Features: Standardized and unstandardize}
+	\end{figure}
+\end{frame}
+
 \begin{frame}[noframenumbering]{Data}
 	The occupancy status of a room was observed for a few days. Snapshots of the  features below were taken every minute.
 	\begin{itemize}
@@ -78,10 +85,6 @@
 \end{frame}
 
 \begin{frame}{Brief Exploration}
-	\begin{itemize}
-		\item Unbalanced data set 
-		\SubItem{Many more unoccupied data points than occupied}
-	\end{itemize}
 	\begin{figure}
 		\includegraphics[width=\linewidth]{pairs.png}
 		\caption{Pairplots of Features}
@@ -92,25 +95,28 @@
 \end{frame}
 
 \begin{frame}{Brief Exploration}
-	\begin{figure}
-		\includegraphics[width=\linewidth]{boxplot.png}
-		\caption{Boxplots of Features: Standardized and unstandardize}
-	\end{figure}
+	\begin{itemize}
+		\item Unbalanced data set 
+		\SubItem{Many more unoccupied data points than occupied} 
+	\end{itemize}
+	As the data set consists of minutley snapshots the sets cannot be combined and then resampled as we might have almost identical data points in all three sets. 
+	
+	\medskip
+	
+	Our solution to this problem was to upsample the Occupied class in both the training and validation sets so that the we had an even split in both.
 \end{frame}
 
 \begin{frame}{Methodology}
 	\begin{itemize}
 		\item SVM 
 		\SubItem{Linear, Radial \& Polynomial}
-		\item KNN
+		\item Logistic Regression
 		\SubItem{Regular \& Weighted}
-		\item Decision Trees
-		\SubItem{Single Tree, Bagging, Boosting}
 	\end{itemize}
 \end{frame}
 
 \begin{frame}{Methodology}{SVM}
-    \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for non-linear classification problems.\par 
+    \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for classification and should generalize well with low costs.\par 
     \medskip
     \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Using the package \textbf{e1071} and the function \textbf{svm}\par
     \makebox[1cm]{}  {\color{darkred}$\rhd$} Linear, polynomial and radial kernels\par
@@ -119,60 +125,10 @@
 		\includegraphics[width=0.5\linewidth]{svmAccuracies.png}
 		\caption{SVM Accuracies}
 	\end{figure}
-	\makebox[1cm]{Thoughts?} \quad {\color{darkred}$\rhd$} High costs $\implies$ favoring low bias and perhaps an underlying \par 
+	\makebox[1cm]{Thoughts?} \quad {\color{darkred}$\rhd$} 
 	\makebox[4.255cm]{} lack of noise.
 \end{frame}
 
-\begin{frame}{Methodology}{KNN}
-	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for non-linear classification problems\par 
-	\makebox[1cm]{} {\color{darkred}$\rhd$} Good with large training data sets \par
-	\makebox[1cm]{} {\color{darkred}$\rhd$} Good if data is not noisy\par
-    \medskip
-    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Regular KNN using the package \textbf{class} and the function \textbf{knn} \par
-	\makebox[1cm]{} {\color{darkred}$\rhd$} Weighted KNN using the package \textbf{kknn} and the function \textbf{kknn}
-	\makebox[2cm]{} {\color{darkred}$\rhd$} Epanechnikov kernel
-\end{frame}
-
-\begin{frame}{Methodology}{KNN - Regular}
-
-After a coarse search for a good value of $k$ we noted that the best classifier was a 1-NN which further indicates that the data is not very noisy at all. The 1-NN achieved a testing accuracy of $93\%$.
-
-\medskip
-
-A possible improvement is to use a weighted KNN where we put more emphasis on training points closer to the point which we want to predict than those further away. 
-\end{frame}
-
-\begin{frame}{Methodology}{KNN - Weighted}
-In order to weight our data points we use the kernel distance from the point we want to predict to the $k$ nearest neighbours. The choice of kernel is of course important but in our case all the available kernels in the function \textbf{kknn} generated approximatley the same results. As such we resorted to the Epanechnikov kernel as it is one we've encountered before.
-
-\medskip
-
-When search for a good value of $k$ in this case we found that the best validation accuracy was obtained for $k = 5$ which seems a bit more stable than using a 1-NN. This was also reflected in the testing accuracy which turned out to be $98.4\%$.
-
-\end{frame}
-
-\begin{frame}{Methodology}{Decision Trees}
-	\makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good with non-linear data\par 
-	\makebox[1cm]{} {\color{darkred}$\rhd$} Good with binary classification \par
-    \medskip
-    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Simple decision trees using package \textbf{rpart} using function \textbf{rpart} \par
-    \makebox[1cm]{} {\color{darkred}$\rhd$} Bagging using the package \textbf{ipred} using function \textbf{bagging} \par
-    \makebox[1cm]{} {\color{darkred}$\rhd$} Boosting using the package \textbf{adabag} using function \textbf{boosting}
-\end{frame}
-
-\begin{frame}{Methodology}{Decision Trees - Single}
-Training a single decision tree resulted in the high test accuracy of $0.92$. This in itself is a strong classifier but it can be further optimized using the aforementioned methods called bagging and boosting.
-\end{frame}
-
-\begin{frame}{Methodology}{Decision Trees - Bagging}
-Bagging algorithms create $B$ bootstrap samples, each samples is fitted by a decision tree. These trees are then averaged to create the so-called bagged tree. 
-$$\hat{f}_{\text{bag}}(x)=\frac{1}{B}\sum_{b=1}^B \hat{f}^{*}_b(x)$$
-The bagged tree however is no longer a tree. This unfortunately means that the interpretability of the decision tree is lost.
-\end{frame}
-
-\begin{frame}{Methodology}{Decision Trees - Boosting}
-Boosting algorithms iterate over a number of trees and for each iteration weight all observations. Correctly classified observations recieve less weight and incorrectly classified observations recieve more weight. This results in each iteration concentrating more and more on the incorreclty classified observations
-\end{frame}
 
 \begin{frame}{Discussion}
 TABLE OF ALL TREES AND IMORTANT THINGS FOUND EARLIER(MODEL TEST ACCURACIES)

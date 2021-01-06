@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.11) (preloaded format=pdflatex 2020.11.2)  5 JAN 2021 17:42
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.11) (preloaded format=pdflatex 2020.11.2)  6 JAN 2021 18:12
 entering extended mode
 **./Beamer
 (Beamer
@@ -979,54 +979,52 @@ thkerncmss.
 )
 [2
 
-] [3
-
 ]
-<pairs.png, id=99, 429.40425pt x 228.25275pt>
-File: pairs.png Graphic file (type png)
-<use pairs.png>
-Package pdftex.def Info: pairs.png  used on input line 92.
-(pdftex.def)             Requested size: 307.28987pt x 163.3527pt.
-
-Overfull \vbox (5.02235pt too high) detected at line 92
- []
-
-[4
-
- <./pairs.png>]
-<boxplot.png, id=127, 567.3195pt x 204.765pt>
+<boxplot.png, id=72, 567.3195pt x 204.765pt>
 File: boxplot.png Graphic file (type png)
 <use boxplot.png>
-Package pdftex.def Info: boxplot.png  used on input line 99.
+Package pdftex.def Info: boxplot.png  used on input line 68.
 (pdftex.def)             Requested size: 307.28987pt x 110.912pt.
+ [3
+
+ <./boxplot.png>] [4
+
+]
+<pairs.png, id=127, 429.40425pt x 228.25275pt>
+File: pairs.png Graphic file (type png)
+<use pairs.png>
+Package pdftex.def Info: pairs.png  used on input line 95.
+(pdftex.def)             Requested size: 307.28987pt x 163.3527pt.
  [5
 
- <./boxplot.png>] [6
+ <./pairs.png>] [6
+
+] [7
 
 ]
-<svmAccuracies.png, id=180, 221.02576pt x 67.452pt>
-File: svmAccuracies.png Graphic file (type png)
-<use svmAccuracies.png>
-Package pdftex.def Info: svmAccuracies.png  used on input line 124.
-(pdftex.def)             Requested size: 153.64493pt x 46.89082pt.
- [7
 
- <./svmAccuracies.png>] [8
+LaTeX Warning: File `svmAccuracies.png' not found on input line 130.
 
-]
-[9
 
-] [10
+! Package pdftex.def Error: File `svmAccuracies.png' not found: using draft set
+ting.
 
-] [11
+See the pdftex.def package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.130 \end{frame}
+                 
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
 
-] [12
 
-] [13
+Overfull \vbox (43.82275pt too high) detected at line 130
+ []
 
-] [14
+[8
 
-] [15
+] [9
 
 ]
 \tf@nav=\write6
@@ -1043,27 +1041,24 @@ Package rerunfilecheck Info: File `Beamer.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 19301 strings out of 479765
- 370457 string characters out of 2876397
- 654322 words of memory out of 3000000
- 35824 multiletter control sequences out of 15000+200000
- 541058 words of font info for 50 fonts, out of 3000000 for 9000
+ 19293 strings out of 479765
+ 370230 string characters out of 2876397
+ 654320 words of memory out of 3000000
+ 35815 multiletter control sequences out of 15000+200000
+ 541226 words of font info for 51 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  125i,16n,126p,429b,562s stack positions out of 5000i,500n,10000p,200000b,50000s
-<C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Pr
-ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Fi
-les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss10.pfb><C:/Program Files/MiKT
-eX 2.9/fonts/type1/public/amsfonts/cm/cmss12.pfb><C:/Program Files/MiKTeX 2.9/f
-onts/type1/public/amsfonts/cm/cmss8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type
-1/public/amsfonts/cm/cmss9.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/
-amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfon
-ts/cm/cmssi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/c
-mssi8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pf
-b><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Pro
-gram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on Beamer.pdf (15 pages, 346352 bytes).
+<C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss10.pfb><C:/Pr
+ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss12.pfb><C:/Program Fi
+les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss8.pfb><C:/Program Files/MiKTe
+X 2.9/fonts/type1/public/amsfonts/cm/cmss9.pfb><C:/Program Files/MiKTeX 2.9/fon
+ts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/typ
+e1/public/amsfonts/cm/cmssi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publ
+ic/amsfonts/cm/cmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfo
+nts/symbols/msam10.pfb>
+Output written on Beamer.pdf (9 pages, 262472 bytes).
 PDF statistics:
- 469 PDF objects out of 1000 (max. 8388607)
- 31 named destinations out of 1000 (max. 500000)
- 58 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 291 PDF objects out of 1000 (max. 8388607)
+ 19 named destinations out of 1000 (max. 500000)
+ 53 words of extra memory for PDF output out of 10000 (max. 10000000)
 
