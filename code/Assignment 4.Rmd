@@ -3,7 +3,7 @@ title: "Project 4"
 author: "Anton Stråhle & Max Sjödin"
 date: "28 december 2020"
 output: pdf_document
-geometry: margin=1cm
+geometry: margin=2cm
 ---
 
 # Introduction
@@ -57,7 +57,7 @@ sStats$`1` %>%
 
 ```
 
-We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we initially wanted to make sure that our training, validation and testing sets reflected this inherent property of the data. However, as the data consists of minutley snapshots we have to make sure that each set consists of different time periods. The reason as to why we have to split the date into periods is that subsequent snapshots will very likely have the same feature values as well as occupancy status which would lead to a e.g. a 1-NN predicting with very higher accuracy accuracy (as almost identical data points would be present in both the training, vadliation and testing data), which is not really what we want. Due to the aforementioned issue with identical data points we will not be using cross validation and instead resort to using a specific validation set to evaluate any parameters.
+We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we initially wanted to make sure that our training, validation and testing sets reflected this inherent property of the data. However, as the data consists of minutely snapshots we have to make sure that each set consists of different time periods. The reason as to why we have to split the date into periods is that subsequent snapshots will very likely have the same feature values as well as occupancy status which would lead to a e.g. a 1-NN predicting with very higher accuracy accuracy (as almost identical data points would be present in both the training, validation and testing data), which is not really what we want. Due to the aforementioned issue with identical data points we will not be using cross validation and instead resort to using a specific validation set to evaluate any parameters.
 
 The class imbalance turned out to be a real issues since some classifiers simply classified the room as unoccupied at all times. As such we resorted to upsample both our training set in order to better allow for the learning of classification of both classes. Due to being outside the the scope of this project we simply generated observations of the minority class with replacement until we had an even split in the training data. In the end this proved to be a major success as we not only classified both classes but also improved the general performance of our models drastically.
 
@@ -102,7 +102,7 @@ As we can see in the figure above the remaining features seem to behave quite ni
 
 # Methodology
 
-As we're dealing with a binary classification problem there are some different methods that we have decided to test out. We initially tested a variety of classifiers but quickly came to the conclussion that most generalized poorly in validation and testing scenarios. As such decided to foucs on classifiers that we can twek through validation such that they generalize well and perhaps ignore any slight differences between the different data sets (as previously mentioned the sets are a collection of snapshots from entierly different days so smaller differences are not unlikely). 
+As we're dealing with a binary classification problem there are some different methods that we have decided to test out. We initially tested a variety of classifiers but quickly came to the conclusion that most generalized poorly in validation and testing scenarios. As such decided to focus on classifiers that we can tweak through validation such that they generalize well and perhaps ignore any slight differences between the different data sets (as previously mentioned the sets are a collection of snapshots from entirely different days so smaller differences are not unlikely). 
 
 Furthermore we also decided to change focus as we assumed that the data could not support a very complex decision boundary as the cutoffs (i.e. the minutes after the occupancy status changes) should be very difficult to classify. The feature values take time to change (i.e. the `CO2` does not go to zero the minute that the room becomes unoccupied and neither does it jump to normal levels (for an occupied room) exactly when people enter) which should make the minutes before and after occupancy difficult to distinguish from actual occupation.
 
@@ -243,23 +243,20 @@ source("boosting.R")
 data.frame(Method = c("Logit", "Boosting", "Lasso", "Ridge"),
            TestAccuracy = c(1-logit.test.error, 1-boost.test.error, 1-lasso.test.error, 1-ridge.test.error)) %>% 
           arrange(-TestAccuracy) %>%   
-  kable(caption = "Logistic Test Accuracies", digits = 5)
+  kable(caption = "Logistic Regression Test Accuracies", digits = 5)
 
 ```
 The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly.
 
 # Discussion
 
-When upsampling the minority class occupied to resolve the class imbalance in the data sets we saw a drastic increase in testing performance. Without the upsampling we achieved approximatley $72\%$ accuracy for the linear SVM whilst we achieved $84\%$ with the upsampled training and validation data (other methods simply achieved an accuracy of about $65\%$ by classifying everything as unoccupied).
+When upsampling the minority class occupied to resolve the class imbalance in the data sets we saw a drastic increase in testing performance. Without the upsampling we achieved approximately $72\%$ accuracy for the linear SVM whilst we achieved $84\%$ with the upsampled training and validation data (other methods simply achieved an accuracy of about $65\%$ by classifying everything as unoccupied).
 
-Although we have achieved decent classification accuracy we have to keep in mind that this is a binary classification problem and as such an accuracy of $50\%$ can be obtained by randomly guessing, assuming that the data is balanced. We think that many of the misclassifications are due to the fact that we have cutoff observations (these being the first few minutes at the start of an occupancy and a few minutes after occupancy). These observations are very difficult (if not impossible) to determine the class of as the feature values are extremly similar to the minutes before when the occupancy status was different. The way in which these have been distinguished in the past (that being in the paper *Candanedo et al. 2016* and in *Tütüncü et al. 2018*) is through the inclusion of the feature `Light`. As mentioned this variable was excluded in our case since it essentially explains the occupancy status by entierly by itself (a decision tree that only seperates the classes by `Light` achieved an accuracy of about $98\%$).
+Although we have achieved decent classification accuracy we have to keep in mind that this is a binary classification problem and as such an accuracy of $50\%$ can be obtained by randomly guessing, assuming that the data is balanced. We think that many of the misclassifications are due to the fact that we have cutoff observations (these being the first few minutes at the start of an occupancy and a few minutes after occupancy). These observations are very difficult (if not impossible) to determine the class of as the feature values are extremely similar to the minutes before when the occupancy status was different. The way in which these have been distinguished in the past (that being in the paper *Candanedo et al. 2016* and in *Tütüncü et al. 2018*) is through the inclusion of the feature `Light`. As mentioned this variable was excluded in our case since it essentially explains the occupancy status by entirely by itself (a decision tree that only separates the classes by `Light` achieved an accuracy of about $98\%$).
 
 # Bibliography
 
 Hastie, T., Tibshirani, R., & Friedman, J. H. (2009). *The elements of statistical learning: data mining, inference, and prediction.* 2nd ed. New York: Springer.
-
-Paul, M. (2017), *Nonlinear Classification* [Presentation]. \\
-https://cmci.colorado.edu/classes/INFO-4604/fa17/files/slides-9_nonlinear.pdf 
 
 Candanedo, L. M., & Feldheim, V. (2016). *Accurate occupancy detection of an office room from light, temperature, humidity and CO 2 measurements using statistical learning models.* Energy and Buildings, 112, 28–39. doi:10.1016/j.enbuild.2015.11.071
 
