@@ -254,6 +254,14 @@ When upsampling the minority class occupied to resolve the class imbalance in th
 
 Although we have achieved decent classification accuracy we have to keep in mind that this is a binary classification problem and as such an accuracy of $50\%$ can be obtained by randomly guessing, assuming that the data is balanced. We think that many of the misclassifications are due to the fact that we have cutoff observations (these being the first few minutes at the start of an occupancy and a few minutes after occupancy). These observations are very difficult (if not impossible) to determine the class of as the feature values are extremely similar to the minutes before when the occupancy status was different. The way in which these have been distinguished in the past (that being in the paper *Candanedo et al. 2016* and in *Tütüncü et al. 2018*) is through the inclusion of the feature `Light`. As mentioned this variable was excluded in our case since it essentially explains the occupancy status by entirely by itself (a decision tree that only separates the classes by `Light` achieved an accuracy of about $98\%$).
 
+# Improvements
+
+There are numerous areas of improvements and other methods which we would have liked to examine. The upsampling that we perform had great impact on the performance of all our models. The method that we use is however very simple and there are several other, more sophisticated, ways of doing it which would likely lead to better training and performance.
+
+We would have liked to exaimne a few different ensamble methods as it seems intuitive that these would further help with generalization. Then again there are of course many other methods that can be tuned to generalize well which we have not examined, but perhaps would have liked to.
+
+It would also be of interest to examine which data points that were actually misclassified (e.g. if it actually were the cutoffs points that have been mentioned a few times throughout this project) and if the performance on these points specifically could be improved.
+
 # Bibliography
 
 Hastie, T., Tibshirani, R., & Friedman, J. H. (2009). *The elements of statistical learning: data mining, inference, and prediction.* 2nd ed. New York: Springer.
