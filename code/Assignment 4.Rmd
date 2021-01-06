@@ -36,6 +36,7 @@ library(grid)
 library(gridExtra)
 library(caret)
 
+
 d1 <- read.delim("../data/datatraining.txt", sep = ",")
 d2 <- read.delim("../data/datatest.txt", sep = ",")
 d3 <- read.delim("../data/datatest2.txt", sep = ",")
@@ -201,17 +202,24 @@ We can also examine the confusion matrices for the three models in order to exam
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
+library(kableExtra)
+
 lCM <- confusionMatrix(predL, testingData$Occupancy)
 
 rCM <- confusionMatrix(predR, testingData$Occupancy)
 
 pCM <- confusionMatrix(predP, testingData$Occupancy)
 
-kable(lCM$table, caption = "Linear")
+cl <- as.data.frame.matrix(lCM$table)
+cr <- as.data.frame.matrix(rCM$table)
+cp <- as.data.frame.matrix(pCM$table)
 
-kable(rCM$table, caption = "Radial")
+cSVM <- cbind(cl, cr, cp)
 
-kable(pCM$table, caption = paste("Polynomial Degree", bestP$d))
+kable(cSVM, longtable =T, booktabs =T, caption ="Confusion Matrices") %>% 
+  add_header_above(c(" ","Linear"=2,"Radial"=2,"Polynomial"=2))%>%
+  kable_styling(latex_options =c("repeat_header")) %>% 
+  kable_classic()
 
 ```
 
@@ -231,10 +239,11 @@ Using the package `mboost` and the function `glmboost` with the adaboost algorit
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 source("boosting.R")
 
-data.frame(Kernel = c("Logit", "Boosting", "Lasso", "Ridge"),
+data.frame(Method = c("Logit", "Boosting", "Lasso", "Ridge"),
            TestAccuracy = c(1-logit.test.error, 1-boost.test.error, 1-lasso.test.error, 1-ridge.test.error)) %>% 
           arrange(-TestAccuracy) %>%   
-  knitr::kable(caption = "Logistic Test Accuracies", digits = 5)
+  kable(caption = "Logistic Test Accuracies", digits = 5)
+
 ```
 The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly.
 
