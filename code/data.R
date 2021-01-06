@@ -8,39 +8,49 @@ library(rpart.plot)
 
 #occupancy Dataset
 
-d1 <- read.delim("../data/datatraining.txt", sep = ",")
-d2 <- read.delim("../data/datatest.txt", sep = ",")
-d3 <- read.delim("../data/datatest2.txt", sep = ",")
+rawTrainingData <- read.delim("../data/datatraining.txt", sep = ",") %>% 
+  select(-date, -Light) %>% 
+  mutate(Occupancy = factor(Occupancy))
 
-occupancyData <- d1 %>% 
-  rbind(d2) %>% 
-  rbind(d3) %>% 
+rawValidationData <- read.delim("../data/datatest2.txt", sep = ",") %>% 
   select(-date) %>% 
   mutate(Occupancy = factor(Occupancy)) %>% 
   select(-Light)
 
-#From CrossValidate package (issues with dependencies in the install so I yoinked their source code)
-balancedSplit <- function(fac, size){
-  trainer <- rep(FALSE, length(fac))
-  for(lev in levels(fac)){
-    N <- sum(fac==lev)
-    wanted <- max(1, trunc(N*size))
-    trainer[fac==lev][sample(N, wanted)] <- TRUE
+rawTestingData <- read.delim("../data/datatest.txt", sep = ",") %>% 
+  select(-date) %>% 
+  mutate(Occupancy = factor(Occupancy)) %>% 
+  select(-Light)
+
+upsampling <- function(data){
+  
+  ones <- sum(data$Occupancy == 1)
+  zeros <- sum(data$Occupancy == 0)
+  
+  dif <- zeros - ones
+  
+  if(dif > 0){
+    
+    toAdd <- data %>% 
+      filter(Occupancy == 1) %>% 
+      sample_n(dif, replace = TRUE)
+    
+  }else{
+    
+    toAdd <- data %>% 
+      filter(Occupancy == 0) %>% 
+      sample_n(dif, replace = TRUE)
+    
   }
-  trainer
+  
+  rbind(data, toAdd)
+  
 }
 
-train <- balancedSplit(occupancyData$Occupancy, size = 0.6)
+upsampledTrainingData <- upsampling(rawTrainingData)
+upsampledValidationData <- upsampling(rawValidationData)
 
-rawTrainingData <- occupancyData[train,]  
-remainingData <- occupancyData[!train,]
-
-validation <- balancedSplit(remainingData$Occupancy, 0.5)
-
-rawValidationData <- remainingData[validation,]
-rawTestingData <- remainingData[!validation,]
-
-standardizeData <- function(data, rawTrain = rawTrainingData){
+standardizeData <- function(data, rawTrain = upsampledTrainingData){
   
   attr <- rawTrain[,!sapply(rawTrain, is.factor)]
   
@@ -53,14 +63,7 @@ standardizeData <- function(data, rawTrain = rawTrainingData){
 }
 
 #Standardized separately, should be the same mean and sd for all data
-trainingData <- standardizeData(rawTrainingData)
-validationData <- standardizeData(rawValidationData)
+trainingData <- standardizeData(upsampledTrainingData)
+validationData <- standardizeData(upsampledValidationData)
 testingData <- standardizeData(rawTestingData)
 
-#Looks very nice id say
-
-trainingData %>% 
-  gather(key = "Variable", value = "Value", -Occupancy) %>% 
-  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
-  geom_boxplot() +
-  facet_wrap(~Variable, scales = "free_y")

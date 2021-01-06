@@ -3,8 +3,9 @@ library(class)
 
 valKNN <- function(K, train = trainingData, val = validationData){
   
-  bestK <- 0
-  bestError <- 1
+  l <- rep(list(c(NA,NA)), length(K))
+  
+  i = 1
   
   for(k in K){
   
@@ -14,16 +15,14 @@ valKNN <- function(K, train = trainingData, val = validationData){
     
     print(paste("Validation Error:", round(valError, digits = 3), "for k =", k))
     
-    if(valError < bestError){
-      
-      bestK <- k
-      bestError <- valError
-      
-    }
+    l[[i]] <- c(k, valError)
   
+    i = i + 1
+    
   }
   
-  bestK
-    
+  data.frame(matrix(unlist(l), ncol = 2, byrow = T)) %>% 
+    setNames(c("k", "error"))
+  
 }
 

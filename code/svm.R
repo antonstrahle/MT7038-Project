@@ -4,8 +4,9 @@ source("data.R")
 
 valLinearSVM <- function(sequence, train = trainingData, val = validationData){
   
-  bestCost <- 0
-  bestValError <- 1
+  l <- rep(list(c(NA,NA)), length(sequence))
+  
+  i = 1
   
   for(C in sequence){
     
@@ -17,23 +18,22 @@ valLinearSVM <- function(sequence, train = trainingData, val = validationData){
     #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
     print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
     
-    if(valError < bestValError){
-      
-      bestValError <- valError
-      bestCost <- C
-      
-    }
+    l[[i]] <- c(C, valError)
+    
+    i = i + 1
     
   }
   
-  bestCost
+  data.frame(matrix(unlist(l), ncol = 2, byrow = T)) %>% 
+    setNames(c("c", "error"))
   
 }
 
 valRadialSVM <- function(sequence, train = trainingData, val = validationData){
   
-  bestCost <- 0
-  bestValError <- 1
+  l <- rep(list(c(NA,NA)), length(sequence))
+  
+  i = 1
   
   for(C in sequence){
     
@@ -45,24 +45,22 @@ valRadialSVM <- function(sequence, train = trainingData, val = validationData){
     #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
     print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
     
-    if(valError < bestValError){
-      
-      bestValError <- valError
-      bestCost <- C
-      
-    }
+    l[[i]] <- c(C, valError)
+    
+    i = i + 1
     
   }
   
-  bestCost
+  data.frame(matrix(unlist(l), ncol = 2, byrow = T)) %>% 
+    setNames(c("c", "error"))
   
 }
 
 valPolynomialSVM <- function(C, deg, coeff, train = trainingData, val = validationData){
   
-  bestCost <- 0
-  bestDeg <- 0
-  bestValError <- 1
+  l <- rep(list(c(NA,NA,NA)), length(C)*length(deg))
+  
+  i = 1
   
   for(d in deg){  
     
@@ -76,23 +74,19 @@ valPolynomialSVM <- function(C, deg, coeff, train = trainingData, val = validati
       #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", c)) 
       print(paste("Validation Error:", round(valError, 4), "for C:", c, "and D:", d)) 
       
-      if(valError < bestValError){
-        
-        bestValError <- valError
-        bestCost <- c
-        bestDeg <- d
-        
-      }
+      l[[i]] <- c(c, d, valError)
       
+      i = i + 1
+
     }
-  
+      
   }
   
-  list("C" = bestCost, "D" = bestDeg)
-  
+  data.frame(matrix(unlist(l), ncol = 3, byrow = T)) %>% 
+  setNames(c("c", "d", "error"))
+
 }
 
-#Radial is king, polt deg 5 is fine but times out. 0.06-0.07 with Radial and best C
 
 
 

@@ -8,11 +8,11 @@ geometry: margin=1cm
 
 # Introduction
 
-This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification on a granular level and then proceed with a more in depth analysis and discussion for those that seem to perform best. The methods that we will initially test  are SVM, KNN and Decision Trees.
+This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification on a granular level and then proceed with a more in depth analysis and discussion for those that seem to perform best. The methods that we will initially test are LDA, Logistic Regression, Naive Bayes and Linear SVMs.
 
 # Data
 
-We picked the `Occupancy Detection` data set as we wanted to work with a binary classification problem as this would allow us to apply most of the methodologies discussed throughout the course. As there are quite a few different binary data sets at UCI we specifically chose our data set as it had a sizable number of instances as well as  few, but intuitively explanatory, features.
+We picked the `Occupancy Detection` data set as we wanted to work with a binary classification problem as this would allow us to apply most of the methodologies discussed throughout the course. As there are quite a few different binary data sets at UCI we specifically chose our data set as it had a sizable number of instances as well as  few, but intuitively explanatory, features. The data set also poses an interesting question with how the features change over time and how this impacts classification.
 
 ## Attributes
 
@@ -29,28 +29,12 @@ library(e1071)
 library(ggpubr)
 library(readxl)
 library(scales)
-library(rpart)
-library(rpart.plot)
 library(knitr)
 library(psych)
-library(ipred)
-library(adabag)
-library(gbm)
 library(kknn)
 library(grid)
 library(gridExtra)
-
-set.seed(2021) #Happy New Year
-
-d1 <- read.delim("../data/datatraining.txt", sep = ",")
-d2 <- read.delim("../data/datatest.txt", sep = ",")
-d3 <- read.delim("../data/datatest2.txt", sep = ",")
-
-occupancyData <- d1 %>% 
-  rbind(d2) %>% 
-  rbind(d3) %>% 
-  select(-date) %>% 
-  mutate(Occupancy = factor(Occupancy))
+library(caret)
 
 sStats <- describeBy(occupancyData, occupancyData$Occupancy)
 
@@ -62,11 +46,11 @@ sStats$`1` %>%
 
 ```
 
-We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we have to make sure that our training, validation and testing sets reflect this inherent property of the data. As such we decided to concatenate the three provided data sets (training, validation and testing) and split these up into balanced sets ourselves as the data providers seems to have just split the complete date by the time stamp which leads to a quite severe imbalance as a weekend is included (i.e. no Occupied observations for two days).
+We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we initially wanted to make sure that our training, validation and testing sets reflected this inherent property of the data. However, as the data consists of minutley snapshots we have to make sure that each set consists of different time periods. The reason as to why we have to split the date into periods is that subsequent snapshots will very likely have the same feature values as well as occupancy status which would lead to a e.g. a 1-NN predicting with 100% accuracy, which is not really what we want. Due to the aforementioned issue with identical data points we will not be using cross validation and instead resort to using a specific validation set to evaluate any parameters.
 
-Beyond the poor splitting of the data into training, validation and testing we found not obvious inconsistencies in the data that needed addressing.
+We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. This turned out to be a real issues since some classifiers simply classified the room as unoccupied at all times as this was the case in the validation set. As such we resorted to upsample both our training and our validation set in order to allow for the classification of both classes. In the end this proved to be a major success as we not only classified both classes but also improved the general performance of our models drastically.
 
-We also chose to standardize to allow for better performance of scale dependent classifiers, e.g. kNN or SVM. As some of the features include some very major deviations as can be seen in the figure below this choice to not standardize would surely impact the performance of these classifiers negatively.
+We also chose to standardize our features to allow for better performance of scale dependent classifiers. As some of the features include some very major deviations as can be seen in the figure below the choice to not standardize would surely impact the performance of these classifiers negatively. 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width=13}
 
@@ -103,65 +87,162 @@ pairs(pData[,-5], col = scales::alpha(cols, 0.2), main = "Figure 2: Correlation 
 
 ```
 
-As we can see in the figure above the remaining features seem to behave quite nicely, although some could be considered to be somewhat correlated (e.g. `Humidity` and `CO2`). There seem to be some quite nice divisions of the occupancy status within the different features which should make adequate classification quite easy.
+As we can see in the figure above the remaining features seem to behave quite nicely, although some could be considered to be somewhat correlated (e.g. `Humidity` and `CO2`). 
 
 # Methodology
 
-As we're dealing with a binary classification problem there are some different methods that we have decided to test out. The methods which we have chosen are SVM, KNN and Decision Trees. Our idea is to examine all methods quite shallowly and then go a bit deeper for one or two that shows promise.
+As we're dealing with a binary classification problem there are some different methods that we have decided to test out. Initially we examined several non-linear classifiers as we believed that the data showed indications of being non-linear. However, it turned out that these generalized very poorly in validation scenarios which made us switch to more stable models. We performed this switch as we assumed that the data we could only support a simple decision boundary as the cutoffs (i.e. the minutes after the occupancy status changes) should be very difficult to classify. The feature values take time to change (i.e. the CO2 does not go to zero the minute that the room becomes unoccupied and neither does it jump to normal levels exactly when people enter).
+
+Due to the aforementioned reasons we have resorted to some very simple, but stable, classifiers. Those specifically being LDA, Naive Bayes, Logistic Regerssion and Linear SVM. 
 
 ## SVM
 
-As support vector machines are good choices for classification it seems appropriate to apply the method to this problem. In Figure 2 above we note that we seem to have non-linear data which suggest that either a polynomial or a radial kernel should work well, or at least better than a linear kernel (*Paul 2017*).
+As support vector machines are good choices for classification it seems appropriate to apply the method to this problem. With a low cost $C$ we should be able to generalize well and thus achieve adequate testing accuracy.
 
 ### Implementation
 
-We examine three different kernels, a linear kernel, a radial kernel as well as a polynomial kernel. We use our aforementioned validation set in order to perform a coarse-to-fine parameter search for the cost $C$ and the degree for the polynomial kernel (in the case of the polynomial kernel we use a grid coarse grid search and then a finer search for the best degree). Using the package `e1071` and the function `svm` we attained the following results for the three scenarios.
-
+Using the package `e1071` and the function `svm` we implement a linear, polynomial and a radial SVM and use a coarse-to-fine search for a good value of $C$ using our aforementioned validation set. 
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE, cache = TRUE}
-
 source("svm.R")
 
 #Linear
 
-bestLC <- valLinearSVM(10^seq(-2, 2, by = 0.5))
+lcDF1 <- valLinearSVM(10^seq(-5, 1, by = 1))
+lcDF2 <- valLinearSVM(10^seq(-4.5, -3.5, by = 0.1))
 
-l <- svm(Occupancy ~ ., data = trainingData, kernel = "linear", C = bestLC)
-predL <- predict(l, testingData)
-lAcc <- mean(predL == testingData$Occupancy)
+lcDF <- lcDF1 %>% 
+  rbind(lcDF2)
+
+bestLC <- lcDF %>% 
+  arrange(error) %>% 
+  select(c) %>% 
+  slice(1) %>% 
+  pull()
+
+ml <- svm(Occupancy ~ ., data = train, kernel = "linear", cost = bestLC)
+
+predL <- predict(ml, testingData)
+
+testErrorLSVM <- mean(predL != testingData$Occupancy)
 
 #Radial
 
-bestRC <- valRadialSVM(10^seq(-2, 5, by = 0.5))
+rcDF1 <- valRadialSVM(10^seq(-5, 1, by = 0.25))
+rcDF2 <- valRadialSVM(10^seq(-2.5, -1, by = 0.1))
 
-r <- svm(Occupancy ~ ., data = trainingData, kernel = "radial", C = bestRC)
-predR <- predict(r, testingData)
-rAcc <- mean(predR == testingData$Occupancy)
+rcDF <- rcDF1 %>% 
+  rbind(rcDF2) 
+
+bestRC <- rcDF %>% 
+  arrange(error) %>% 
+  select(c) %>% 
+  slice(1) %>% 
+  pull()
+
+mr <- svm(Occupancy ~ ., data = train, kernel = "radial", cost = bestRC)
+
+predR <- predict(mr, testingData)
+
+testErrorRSVM <- mean(predR != testingData$Occupancy)
 
 #Polynomial
 
-bestP <- valPolynomialSVM(10^seq(-2, 5, by = 0.5), deg = seq(2,5), coeff = 1)
+pcDF1 <- valPolynomialSVM(10^seq(-4, 1, by = 0.5), 2:4, 1)
+pcDF2 <- valPolynomialSVM(10^seq(-3, -2, by = 0.1), 2:3, 1)
+pcDF3 <- valPolynomialSVM(10^seq(-4, -3, by = 0.1), 4, 1)
 
-p <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", C = bestP$C, degree = bestP$D, coef0 = 1)
-predP <- predict(p, testingData)
-pAcc <- mean(predP == testingData$Occupancy)
+pcDF <- pcDF1 %>% 
+  rbind(pcDF2) %>% 
+  rbind(pcDF3)
+
+bestPC <- pcDF %>% 
+  arrange(error) %>% 
+  select(d, c) %>% 
+  slice(1)
+
+mp <- svm(Occupancy ~ ., data = train, kernel = "radial", cost = bestPC$c, degree = bestPC$d, coef0 = 1)
+
+predP <- predict(mp, testingData)
+
+testErrorPSVM <- mean(predP != testingData$Occupancy)
 
 ```
 
-For the linear kernel we only resort to a coarse parameter search as it's performance is not going to be able to match that of the polynomial or the radial kernel (and since the validation error is the same it did not change much over the costs examined ($\{10^{i}\}_{i=-2}^3$).
 
-For the polynomial kernel we encountered some computational difficulties (the optimizer did not converge within the iteration limit of the `e1071`) when examining higher costs. As such we were only able fully examine the range of costs for the higher degrees. We did note an increase in the validation accuracy when increasing both the degree and the cost. This seems to indicate that the data lacks a lot of noise as we seem to favor a narrow, low bias, classifier which we obtain by using such a high cost. 
+```{r echo = FALSE, warning = FALSE, message = FALSE}
 
-For the radial kernel we had similar findings as we did for the polynomial kernel. We achieved higher validation accuracies by increasing the cost (this increase did however slow down eventually) which prompted us to once again disregard the finer part of the parameter search in order to simply examine higher costs.
+data.frame(Kernel = c("Linear", "Radial", paste("Polynomial Degree", bestP$d)),
+           Cost = c(bestLC, bestRC, bestP$c),
+           TestAccuracy = c(1-testErrorLSVM, 1-testErrorRSVM, 1-testErrorPSVM)) %>% 
+  kable(caption = "SVM Test Accuracies", digits = 3)
+
+```
+
+We also note that the optimal values of $C$, based on the performance on the validation set, turned out to be very low for all three kernels.
+
+This vast difference between validation and test performance must surely be attributed to differences in the number of occupied/unoccupied observations in each of the sets. As such we examine the confusion matrices for the testing data for our three models.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+
+lCM <- confusionMatrix(testingData$Occupancy, predL)
+
+rCM <- confusionMatrix(testingData$Occupancy, predR)
+
+pCM <- confusionMatrix(testingData$Occupancy, predP) 
+
+
+```
+
+
+```{r}
+
+source("data.r")
+
+nbTrain <- trainingData %>% select(-HumidityRatio)
+nbTest <- testingData %>% select(-HumidityRatio)
+
+m <- naiveBayes(Occupancy ~ ., data = nbTrain)
+
+pred <- m %>% predict(testingData)
+
+testError <- mean(pred != testingData$Occupancy)
+
+```
+
+```{r}
+
+source("data.R")
+
+m <- glm(Occupancy ~., family="binomial", data= trainingData)
+
+probs <- m %>% predict(testingData)
+
+pred <- ifelse(probs > 0.5, 1, 0)
+
+testError <- mean(pred != testingData$Occupancy)
+
+```
+
+
+For the linear kernel we only resort to a coarse parameter search as it's performance did not come close to being able to match that of the polynomial or the radial kernel as can be seen in Figure X in the Appendix.
+
+For all kernels we encountered some computational difficulties (the optimizer did not converge within the iteration limit of the `e1071`) when examining higher costs or combinations of degrees and costs.
+
+For the polynomial kernel we did note an increase in the validation accuracy when increasing both the degree and the cost (although we could not examine higher costs/degrees due to the aforementioned computational issues) which can be seen in Figure X in the Appendix. 
+
+For the radial kernel we had similar findings as we did for the polynomial kernel. We achieved higher validation accuracies by increasing the cost (as can be seen in Figure X in the Appendix) which prompted us to once again disregard the finer part of the parameter search in order to simply examine higher costs.
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 
-data.frame(Kernel = c("Linear", "Radial", paste("Polynomial degree", bestP$D)),
+data.frame(Kernel = c("Linear", "Radial", paste("Polynomial Degree", bestP$D)),
            Cost = c(bestLC, bestRC, bestP$C),
            TestAccuracy = c(lAcc, rAcc, pAcc)) %>% 
   kable(caption = "SVM Test Accuracies", digits = 3)
 
 ```
+
+For all the kernels we seem to favor a very hard margin as is evident by the increased validation performance when increasing the cost. This leads us to believe that the data is not very noisy as such hard margins would otherwise perform catastrphically on new test data, which it does not.
 
 ## KNN
 
@@ -173,9 +254,17 @@ Using the package `Class` and the function `knn` we do a parameter search using 
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
 
+set.seed(2021) #respecify seed to be able to run chunks alone
+
 source("knn.R")
 
-bestK <- valKNN(1:25)
+knnDF <- valKNN(seq(1, 400, by = 10))
+
+bestK <- knnDF %>% 
+  arrange(error) %>% 
+  select(k) %>% 
+  slice(1) %>% 
+  pull()
 
 k <- knn(trainingData[, !sapply(trainingData, is.factor)], testingData[, !sapply(testingData, is.factor)], 
          cl = trainingData[,sapply(trainingData, is.factor)], k = bestK)
@@ -191,9 +280,18 @@ A possible way to enhance the nearest neighbor model is through weighting (*Hast
 In order to implement this weighting scheme we use the `kknn` package and the included function with the same name which uses kernel-difference weighting. The package allows for the usage of many different kernels but the results that they produce do not differ enough to justify an inclusion of all of them. As such we use the *Gaussian* kernel as it is one which we've encountered before.  
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+
+set.seed(2021) #respecify seed to be able to run chunks alone
+
 source("wknn.R")
 
-bestWK <- valWKNN(1:50)
+wknnDF <- valWKNN(seq(400, 600, by = 25))
+
+bestWK <- wknnDF %>% 
+  arrange(error) %>% 
+  select(k) %>% 
+  slice(1) %>% 
+  pull()
 
 wk <- kknn(Occupancy ~ ., train = trainingData, test = testingData, kernel = "gaussian", k = bestWK) 
     
@@ -201,7 +299,7 @@ wkAcc <- mean(testingData[, sapply(testingData, is.factor)] == wk$fitted.values)
 
 ```
 
-When using weighting we actually use `r bestWK` neighbors instead of only one, this also leads to a much higher accuracy as well at `r wkAcc`.
+When using a weighted `r bestWK`-NN we obtained a testing accuracy of `r wkAcc`. If we examine the parameter serach using the validation set in the Appendix we note that we essentially have the same validation error for a lot of different values of $k$. This is likely due to the fact that we have minutley observations that have the same occupancy status with equal, or very similar feature values which will lead to similar results for different values of $k$. In hindsight this similairity in the data set should imply that the usage of weighting is redundant as we would more often than not be weighting "identical" neighbors. 
 
 ## Decions Trees
 
@@ -263,7 +361,7 @@ data.frame(Method = c("Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM
   arrange(desc(Accuracy)) %>% 
   kable(caption = "Final Test Accuracies", digits = 3)
 
-data.frame(Method = c("Simple","Boosting","Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM","Linear SVM", paste("Polynomial degree", bestP$D)),
+data.frame(Method = c("Simple","Boosting","Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM","Linear SVM", paste("Polynomial SVM Degree", bestP$D)),
            'Accuracy' = c(1-testErrorTree, 1-testErrorBoost,1-testErrorBag, wkAcc, rAcc, lAcc, pAcc)) %>% 
   arrange(desc(Accuracy)) %>% 
   kable(caption = "Final Test Accuracies", digits = 3)
@@ -279,7 +377,34 @@ Hastie, T., Tibshirani, R., & Friedman, J. H. (2009). *The elements of statistic
 Paul, M. (2017), *Nonlinear Classification* [Presentation]. \\
 https://cmci.colorado.edu/classes/INFO-4604/fa17/files/slides-9_nonlinear.pdf 
 
+Accurate occupancy detection of an office room from light, temperature, humidity and CO2 measurements using statistical learning models. Luis M. Candanedo, VÃ©ronique Feldheim. Energy and Buildings. Volume 112, 15 January 2016, Pages 28-39
+
 # Appendix
+
+## Figures
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+
+knnDF %>% 
+  ggplot(aes(x = k, y = error)) +
+  geom_line() +
+  geom_point() +
+  ylab("Error on Validation Set") +
+  xlab(expression(k)) +
+  ggtitle("KNN Tuning")
+
+wknnDF %>% 
+  ggplot(aes(x = k, y = error)) +
+  geom_line() +
+  geom_point() +
+  ylab("Error on Validation Set") +
+  xlab(expression(k)) +
+  ggtitle("Weighted-KNN Tuning")
+
+```
+
+
+## Code
 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 
