@@ -46,6 +46,7 @@ occupancyData <- d1 %>%
   rbind(d3) %>% 
   select(-date) %>% 
   mutate(Occupancy = factor(Occupancy))
+
 sStats <- describeBy(occupancyData, occupancyData$Occupancy)
 
 sStats$`0` %>% 
@@ -58,9 +59,9 @@ sStats$`1` %>%
 
 We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we initially wanted to make sure that our training, validation and testing sets reflected this inherent property of the data. However, as the data consists of minutley snapshots we have to make sure that each set consists of different time periods. The reason as to why we have to split the date into periods is that subsequent snapshots will very likely have the same feature values as well as occupancy status which would lead to a e.g. a 1-NN predicting with very higher accuracy accuracy (as almost identical data points would be present in both the training, vadliation and testing data), which is not really what we want. Due to the aforementioned issue with identical data points we will not be using cross validation and instead resort to using a specific validation set to evaluate any parameters.
 
-The class imbalance turned out to be a real issues since some classifiers simply classified the room as unoccupied at all times. As such we resorted to upsample both our training and our validation set in order to allow for the classification of both classes (SOURCE ON UPSAMPLING). In the end this proved to be a major success as we not only classified both classes but also improved the general performance of our models drastically.
+The class imbalance turned out to be a real issues since some classifiers simply classified the room as unoccupied at all times. As such we resorted to upsample both our training set in order to better allow for the learning of classification of both classes. Due to being outside the the scope of this project we simply generated observations of the minority class with replacement until we had an even split in the training data. In the end this proved to be a major success as we not only classified both classes but also improved the general performance of our models drastically.
 
-We also chose to standardize our features to allow for better performance of scale dependent classifiers. As some of the features include some very major deviations as can be seen in the figure below the choice to not standardize would surely impact the performance of these classifiers negatively. 
+We also standardize the data before upsampling as we will be using some non-scale invariant classifiers.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width=13}
 

@@ -48,9 +48,6 @@ upsampling <- function(data){
   
 }
 
-upsampledTrainingData <- upsampling(rawTrainingData)
-upsampledValidationData <- upsampling(rawValidationData)
-
 standardizeData <- function(data, rawTrain = upsampledTrainingData){
   
   attr <- rawTrain[,!sapply(rawTrain, is.factor)]
@@ -64,7 +61,7 @@ standardizeData <- function(data, rawTrain = upsampledTrainingData){
 }
 
 #Standardized separately, should be the same mean and sd for all data
-trainingData <- standardizeData(upsampledTrainingData)
-validationData <- standardizeData(upsampledValidationData)
+trainingData <- upsampling(standardizeData(rawTrainingData))
+validationData <- standardizeData(rawValidationData)
 testingData <- standardizeData(rawTestingData)
 
