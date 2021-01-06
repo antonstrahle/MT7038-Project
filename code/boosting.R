@@ -52,7 +52,7 @@ valLasso <- function(sequence = 10^seq(-1, 0, by = 0.01)){
     
     valError <- mean(pred != as.numeric(as.character(yVal)))
     
-    print(paste("Validation Error", valError, "for lambda =", l))
+    #print(paste("Validation Error", valError, "for lambda =", l))
     
     j[[i]] <- c(l, valError)
     
@@ -86,10 +86,6 @@ pred.ridge <- predict(ridge.model, xTest, type = "class")
 ridge.test.error <- mean(pred.ridge != testingData$Occupancy)
 
 
-data.frame(Kernel = c("Logit", "Boosting", "Lasso", "Ridge"),
-           TestAccuracy = c(1-logit.test.error, 1-boost.test.error, 1-lasso.test.error, 1-ridge.test.error)) %>% 
-          arrange(-TestAccuracy) %>%   
-  knitr::kable(caption = "Logistic Test Accuracies", digits = 5)
 
 
 

@@ -219,7 +219,24 @@ In all three models we seem to have proportionally fewer false negatives than we
 
 In all it seems that low cost SMVs, regardless of kernel, are a good tool when stability is of the utmost importance (at least when it comes to our data set).
 
+\newpage
 ## Logistic Regression
+
+Logistic regression is a good choice for binary classification problems like this one. We also look at different forms of regularized logistic regression as well as boosting to hopefully achieve higher test accuracies.
+
+### Implementation
+
+Using the package `mboost` and the function `glmboost` with the adaboost algorithm in order to boost the logistic regression model. For regularized logistic regression we look at both lasso and ridge regression using the package `glmnet` and the function `glmnet`. Implementing these algorithms gave the following results.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+source("boosting.R")
+
+data.frame(Kernel = c("Logit", "Boosting", "Lasso", "Ridge"),
+           TestAccuracy = c(1-logit.test.error, 1-boost.test.error, 1-lasso.test.error, 1-ridge.test.error)) %>% 
+          arrange(-TestAccuracy) %>%   
+  knitr::kable(caption = "Logistic Test Accuracies", digits = 5)
+```
+The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly.
 
 # Discussion
 
