@@ -79,7 +79,43 @@ pred.lasso <- predict(lasso.model, xTest, type = "class")
 lasso.test.error <- mean(pred.lasso != yTest)
 
 #Ridge
-ridge.model <- glmnet(xTrain, trainingData$Occupancy, family = "binomial", alpha = 0)
+
+valRidge <- function(sequence = 10^seq(-1, 0, by = 0.01)){
+  j <- rep(list(c(NA,NA)), length(sequence))
+  
+  i <- 1
+  
+  for(l in sequence){
+    
+    m <- glmnet(xTrain, yTrain, alpha = 0, family = "binomial", type.measure = "class", lambda = l)
+    
+    probs <- m %>% predict(newx = xVal)
+    pred <- probs > 0
+    
+    valError <- mean(pred != as.numeric(as.character(yVal)))
+    
+    #print(paste("Validation Error", valError, "for lambda =", l))
+    
+    j[[i]] <- c(l, valError)
+    
+    i <- i + 1 
+    
+  }
+  
+  data.frame(matrix(unlist(j), ncol = 2, byrow = T)) %>% 
+    setNames(c("l", "error"))  
+}
+
+lRidge <- valRidge()
+
+bestRidge <- lRidge %>% 
+  arrange(error) %>% 
+  select("l") %>% 
+  slice(1) %>% 
+  pull()
+
+
+ridge.model <- glmnet(xTrain, trainingData$Occupancy, family = "binomial", alpha = 0, lambda = bestRidge)
 
 pred.ridge <- predict(ridge.model, xTest, type = "class")
 

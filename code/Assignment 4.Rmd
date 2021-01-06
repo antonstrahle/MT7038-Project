@@ -288,6 +288,24 @@ pcDF %>%
   xlab(expression(c)) +
   ggtitle("Polynomial SVM: Coarse-to-fine for C") +
   facet_wrap(~d)
+
+lRidge %>% 
+  ggplot(aes(x = l, y = error)) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10() +
+  ylab("Error on Validation Set") +
+  xlab(expression(c)) +
+  ggtitle("Ridge regression: Coarse-to-fine for Lambda")
+
+lLasso %>% 
+  ggplot(aes(x = l, y = error)) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10() +
+  ylab("Error on Validation Set") +
+  xlab(expression(c)) +
+  ggtitle("Lasso regression: Coarse-to-fine for Lambda")
 ```
 
 ## Code
