@@ -16,7 +16,7 @@ We picked the `Occupancy Detection` data set as we wanted to work with a binary 
 
 ## Attributes
 
-The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of a few weeks. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air". 
+The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of a few weeks. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air" by the contributors (and authors of *Candanedo et al. 2016*). 
 
 ## Exploration
 
@@ -100,17 +100,19 @@ As we can see in the figure above the remaining features seem to behave quite ni
 
 # Methodology
 
-As we're dealing with a binary classification problem there are some different methods that we have decided to test out. We initially tested a variety of classifiers but quickly came to the conclussion that most generalized very poorly in validation and testing scenarios. As such decided to foucs on more stable classifiers that would generalize well and perhaps ignore any slight differences between the different data sets (as previously mentioned the sets are a collection of snapshots from entierly different days so smaller differences are not unlikely). Furthermore we also performed decided to change focus as we assumed that the data could only support a simple decision boundary as the cutoffs (i.e. the minutes after the occupancy status changes) should be very difficult to classify. The feature values take time to change (i.e. the `CO2` does not go to zero the minute that the room becomes unoccupied and neither does it jump to normal levels (for an occupied room) exactly when people enter).
+As we're dealing with a binary classification problem there are some different methods that we have decided to test out. We initially tested a variety of classifiers but quickly came to the conclussion that most generalized poorly in validation and testing scenarios. As such decided to foucs on classifiers that we can twek through validation such that they generalize well and perhaps ignore any slight differences between the different data sets (as previously mentioned the sets are a collection of snapshots from entierly different days so smaller differences are not unlikely). 
 
-Due to the aforementioned reasons we have resorted to some very simple, but stable, classifiers. Those specifically being SVMs, Logistic Regression and ...
+Furthermore we also decided to change focus as we assumed that the data could not support a very complex decision boundary as the cutoffs (i.e. the minutes after the occupancy status changes) should be very difficult to classify. The feature values take time to change (i.e. the `CO2` does not go to zero the minute that the room becomes unoccupied and neither does it jump to normal levels (for an occupied room) exactly when people enter) which should make the minutes before and after occupancy difficult to distinguish from actual occupation.
+
+Due to the aforementioned reasons we have resorted to some very simple classifiers that we think will generalize well. Those specifically being SVM and regularized Logistic Regression.
 
 ## SVM
 
-As support vector machines are good choices for classification it seems appropriate to apply the method to this problem. With a low cost $C$ we should be able to generalize well and thus achieve adequate testing accuracy. It has also been shown in (*Bousquet, Elisseef 2002*) that low cost SVMs are in fact stable classifiers.
+As support vector machines are good choices for classification it seems appropriate to apply the method to this problem. With a low cost $C$ we should be able to generalize well and thus achieve adequate testing accuracy. 
 
 ### Implementation
 
-Using the package `e1071` and the function `svm` we implement a linear, polynomial and a radial SVM and use a coarse-to-fine search for a good value of $C$ using our aforementioned validation set. 
+Using the package `e1071` and the function `svm` we implement a linear, polynomial and a radial SVM and use a coarse-to-fine search for a good value of $C$ using our aforementioned validation set. The results of this search can be found in Figure X, Y and Z in the Appendix.
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE, cache = TRUE}
 source("svm.R")
@@ -158,10 +160,10 @@ testErrorRSVM <- mean(predR != testingData$Occupancy)
 #Polynomial
 
 pcDF1 <- valPolynomialSVM(10^seq(-5, 1, by = 1), 2:4, 1)
-pcDF2 <- valPolynomialSVM(10^seq(-3, -2, by = 0.1), 2, 1)
+pcDF2 <- valPolynomialSVM(10^seq(-4.25, -3.25, by = 0.1), 2, 1)
 pcDF3 <- valPolynomialSVM(10^seq(-4, -3, by = 0.1), 3, 1)
 pcDF4 <- valPolynomialSVM(10^seq(-5, -4, by = 0.1), 4, 1)
-pcDF5 <- valPolynomialSVM(10^seq(-4.75, -4.25, by = 0.05), 4, 1)
+pcDF5 <- valPolynomialSVM(10^seq(-4.6, -4.3, by = 0.05), 4, 1)
 
 pcDF <- pcDF1 %>% 
   rbind(pcDF2) %>% 
@@ -182,7 +184,7 @@ testErrorPSVM <- mean(predP != testingData$Occupancy)
 
 ```
 
-We seem to have similar performances for all different kernels as can be seen in the table below.
+We seem to have similar testing performances for all different kernels as can be seen in the table below.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -193,9 +195,9 @@ data.frame(Kernel = c("Linear", "Radial", paste("Polynomial Degree", bestP$d)),
 
 ```
 
-We also note that the optimal values of $C$, based on the performance on the validation set, turned out to be very low for all three kernels. This indicates, as we initially thought, that more stable classifiers would generalize well.
+We also note that the optimal values of $C$, based on the performance on the validation set, turned out to be very low for all three kernels. As we initially thought there does seem to be a need to be quite heavily regularized in order to perform well on the validation set.
 
-We can also examine the confusion matrices for the three models.
+We can also examine the confusion matrices for the three models in order to examine whether the misclassifications are split evenly between the classes or not.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -205,11 +207,11 @@ rCM <- confusionMatrix(predR, testingData$Occupancy)
 
 pCM <- confusionMatrix(predP, testingData$Occupancy)
 
-kable(lCM$table, caption = "Linear") #%>%kable_styling(full_width = FALSE, position = "float_left")
+kable(lCM$table, caption = "Linear")
 
-kable(rCM$table, caption = "Radial") #%>%kable_styling(full_width = FALSE, position = "float_left")
+kable(rCM$table, caption = "Radial")
 
-kable(pCM$table, caption = paste("Polynomial Degree", bestP$d)) #%>%kable_styling(full_width = FALSE, position = "left")
+kable(pCM$table, caption = paste("Polynomial Degree", bestP$d))
 
 ```
 
@@ -217,22 +219,30 @@ In all three models we seem to have proportionally fewer false negatives than we
 
 In all it seems that low cost SMVs, regardless of kernel, are a good tool when stability is of the utmost importance (at least when it comes to our data set).
 
+## Logistic Regression
+
+# Discussion
+
+When upsampling the minority class occupied to resolve the class imbalance in the data sets we saw a drastic increase in testing performance. Without the upsampling we achieved approximatley $72\%$ accuracy for the linear SVM whilst we achieved $84\%$ with the upsampled training and validation data (other methods simply achieved an accuracy of about $65\%$ by classifying everything as unoccupied).
+
+Although we have achieved decent classification accuracy we have to keep in mind that this is a binary classification problem and as such an accuracy of $50\%$ can be obtained by randomly guessing, assuming that the data is balanced. We think that many of the misclassifications are due to the fact that we have cutoff observations (these being the first few minutes at the start of an occupancy and a few minutes after occupancy). These observations are very difficult (if not impossible) to determine the class of as the feature values are extremly similar to the minutes before when the occupancy status was different. The way in which these have been distinguished in the past (that being in the paper *Candanedo et al. 2016* and in *Tütüncü et al. 2018*) is through the inclusion of the feature `Light`. As mentioned this variable was excluded in our case since it essentially explains the occupancy status by entierly by itself (a decision tree that only seperates the classes by `Light` achieved an accuracy of about $98\%$).
+
 # Bibliography
 
 Hastie, T., Tibshirani, R., & Friedman, J. H. (2009). *The elements of statistical learning: data mining, inference, and prediction.* 2nd ed. New York: Springer.
 
-O. Bousquet and A. Elisseeff. *Stability and generalization.* J. Mach. Learn. Res., 2:499–526, 2002.
-
 Paul, M. (2017), *Nonlinear Classification* [Presentation]. \\
 https://cmci.colorado.edu/classes/INFO-4604/fa17/files/slides-9_nonlinear.pdf 
 
-Accurate occupancy detection of an office room from light, temperature, humidity and CO2 measurements using statistical learning models. Luis M. Candanedo, VÃ©ronique Feldheim. Energy and Buildings. Volume 112, 15 January 2016, Pages 28-39
+Candanedo, L. M., & Feldheim, V. (2016). *Accurate occupancy detection of an office room from light, temperature, humidity and CO 2 measurements using statistical learning models.* Energy and Buildings, 112, 28–39. doi:10.1016/j.enbuild.2015.11.071
+
+Tütüncü, Kemal & çataltaş, Özcan & Koklu, Murat. (2018). *Occupancy Detection Through Light, Temperature, Humidity and CO2 Sensors Using ANN.* 
 
 # Appendix
 
 ## Figures
 
-```{r echo = FALSE, message = FALSE, warning = FALSE}
+```{r echo = FALSE, message = FALSE, warning = FALSE, fig.width=10, fig.height = 5}
 
 lcDF %>% 
   ggplot(aes(x = c, y = error)) +
@@ -263,244 +273,26 @@ pcDF %>%
   facet_wrap(~d)
 ```
 
-
 ## Code
 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 
 ```
 
+\newpage
 
-```{r echo=TRUE, eval=FALSE}
-#svm.R
-source("data.R")
+### data.r
 
+Includes the initial manipulation of the data.
 
-
-valLinearSVM <- function(sequence, train = trainingData, val = validationData){
-  
-  bestCost <- 0
-  bestValError <- 1
-  
-  for(C in sequence){
-    
-    m <- svm(Occupancy ~ ., data = train, kernel = "linear", cost = C)
-    pred <- predict(m, val)
-    
-    valError <- mean(pred != val$Occupancy)
-    
-    #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
-    print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
-    
-    if(valError < bestValError){
-      
-      bestValError <- valError
-      bestCost <- C
-      
-    }
-    
-  }
-  
-  bestCost
-  
-}
-
-valRadialSVM <- function(sequence, train = trainingData, val = validationData){
-  
-  bestCost <- 0
-  bestValError <- 1
-  
-  for(C in sequence){
-    
-    m <- svm(Occupancy ~ ., data = train, kernel = "radial", cost = C)
-    pred <- predict(m, val)
-    
-    valError <- mean(pred != val$Occupancy)
-    
-    #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", C)) 
-    print(paste("Validation Error:", round(valError, 4), "for C:", C)) 
-    
-    if(valError < bestValError){
-      
-      bestValError <- valError
-      bestCost <- C
-      
-    }
-    
-  }
-  
-  bestCost
-  
-}
-
-valPolynomialSVM <- function(C, deg, coeff, train = trainingData, val = validationData){
-  
-  bestCost <- 0
-  bestDeg <- 0
-  bestValError <- 1
-  
-  for(d in deg){  
-    
-    for(c in C){
-    
-      m <- svm(Occupancy ~ ., data = train, kernel = "polynomial", cost = c, degree = d, coef0 = coeff)
-      pred <- predict(m, val)
-      
-      valError <- mean(pred != val$Occupancy)
-      
-      #print(paste("Training Error:", round(mean(m$fitted != train$Occupancy), 4), "for C:", c)) 
-      print(paste("Validation Error:", round(valError, 4), "for C:", c, "and D:", d)) 
-      
-      if(valError < bestValError){
-        
-        bestValError <- valError
-        bestCost <- c
-        bestDeg <- d
-        
-      }
-      
-    }
-  
-  }
-  
-  list("C" = bestCost, "D" = bestDeg)
-  
-}
-```
-
-```{r echo=TRUE, eval=FALSE}
-#knn.R
-source("data.R")
-library(class)
-
-valKNN <- function(K, train = trainingData, val = validationData){
-  
-  bestK <- 0
-  bestError <- 1
-  
-  for(k in K){
-  
-    m <- knn(train[, !sapply(train, is.factor)], val[, !sapply(val, is.factor)], cl = train[,sapply(train, is.factor)], k = k) 
-    
-    valError <- mean(val[, sapply(val, is.factor)] != m)
-    
-    print(paste("Validation Error:", round(valError, digits = 3), "for k =", k))
-    
-    if(valError < bestError){
-      
-      bestK <- k
-      bestError <- valError
-      
-    }
-  
-  }
-  
-  bestK
-    
-}
+```{r, code = readLines('data.r'), eval = FALSE}
 
 ```
 
-```{r echo=TRUE, eval=FALSE}
-#wknn.R
-source("data.r")
-library(kknn)
+### svm.r
 
-valWKNN <- function(K, kernel = "gaussian", train = trainingData, val = validationData){
-  
-  bestK <- 0
-  bestError <- 1
-  
-  for(k in K){
-    
-    m <- kknn(Occupancy ~ ., train = train, test = val, kernel = kernel, k = k) 
-    
-    valError <- mean(val[, sapply(val, is.factor)] != m$fitted.values)
-    
-    print(paste("Validation Error:", round(valError, digits = 3), "for k =", k))
-    
-    if(valError < bestError){
-      
-      bestK <- k
-      bestError <- valError
-      
-    }
-    
-  }
-  
-  bestK
-  
-}
+Includes the functions for validating different svm models.
 
-```
-
-```{r echo=TRUE, eval=FALSE}
-#data.R
-library(tidyverse)
-library(e1071)
-library(ggpubr)
-library(readxl)
-library(scales)
-library(rpart)
-library(rpart.plot)
-
-#occupancy Dataset
-
-d1 <- read.delim("../data/datatraining.txt", sep = ",")
-d2 <- read.delim("../data/datatest.txt", sep = ",")
-d3 <- read.delim("../data/datatest2.txt", sep = ",")
-
-occupancyData <- d1 %>% 
-  rbind(d2) %>% 
-  rbind(d3) %>% 
-  select(-date) %>% 
-  mutate(Occupancy = factor(Occupancy)) %>% 
-  select(-Light)
-
-#From CrossValidate package (issues with dependencies in the install so I yoinked their source code)
-balancedSplit <- function(fac, size){
-  trainer <- rep(FALSE, length(fac))
-  for(lev in levels(fac)){
-    N <- sum(fac==lev)
-    wanted <- max(1, trunc(N*size))
-    trainer[fac==lev][sample(N, wanted)] <- TRUE
-  }
-  trainer
-}
-
-train <- balancedSplit(occupancyData$Occupancy, size = 0.6)
-
-rawTrainingData <- occupancyData[train,]  
-remainingData <- occupancyData[!train,]
-
-validation <- balancedSplit(remainingData$Occupancy, 0.5)
-
-rawValidationData <- remainingData[validation,]
-rawTestingData <- remainingData[!validation,]
-
-standardizeData <- function(data, rawTrain = rawTrainingData){
-  
-  attr <- rawTrain[,!sapply(rawTrain, is.factor)]
-  
-  mean <- apply(attr, 2, mean)
-  sd <- apply(attr, 2, sd)
-  
-  data.frame(Occupancy = data[,sapply(rawTrain, is.factor)]) %>% 
-    cbind(t((t(data[,!sapply(rawTrain, is.factor)]) - mean)/sd))
-  
-}
-
-#Standardized separately, should be the same mean and sd for all data
-trainingData <- standardizeData(rawTrainingData)
-validationData <- standardizeData(rawValidationData)
-testingData <- standardizeData(rawTestingData)
-
-#Looks very nice id say
-
-trainingData %>% 
-  gather(key = "Variable", value = "Value", -Occupancy) %>% 
-  ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
-  geom_boxplot() +
-  facet_wrap(~Variable, scales = "free_y")
+```{r, code = readLines('svm.r'), eval = FALSE}
 
 ```

@@ -9,8 +9,9 @@ library(rpart.plot)
 #occupancy Dataset
 
 rawTrainingData <- read.delim("../data/datatraining.txt", sep = ",") %>% 
-  select(-date, -Light) %>% 
-  mutate(Occupancy = factor(Occupancy))
+  select(-date)%>% 
+  mutate(Occupancy = factor(Occupancy)) %>% 
+  select(-Light)
 
 rawValidationData <- read.delim("../data/datatest2.txt", sep = ",") %>% 
   select(-date) %>% 
