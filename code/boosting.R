@@ -36,25 +36,47 @@ xVal <- model.matrix(Occupancy~., validationData)[,-1]
 yVal <- validationData$Occupancy
 
 #Lasso
-lasso.model <- glmnet(xTrain, yTrain, family = "binomial", alpha = 1)
+
+
+valLasso <- function(sequence = 10^seq(-1, 0, by = 0.01)){
+  j <- rep(list(c(NA,NA)), length(sequence))
+  
+  i <- 1
+  
+  for(l in sequence){
+    
+    m <- glmnet(xTrain, yTrain, alpha = 1, family = "binomial", type.measure = "class", lambda = l)
+    
+    probs <- m %>% predict(newx = xVal)
+    pred <- probs > 0
+    
+    valError <- mean(pred != as.numeric(as.character(yVal)))
+    
+    print(paste("Validation Error", valError, "for lambda =", l))
+    
+    j[[i]] <- c(l, valError)
+    
+    i <- i + 1 
+    
+  }
+  
+  data.frame(matrix(unlist(j), ncol = 2, byrow = T)) %>% 
+    setNames(c("l", "error"))  
+}
+
+lLasso <- valLasso()
+
+bestLasso <- lLasso %>% 
+  arrange(error) %>% 
+  select("l") %>% 
+  slice(1) %>% 
+  pull()
+
+lasso.model <- glmnet(xTrain, yTrain, family = "binomial", alpha = 1, lambda = bestLasso)
 
 pred.lasso <- predict(lasso.model, xTest, type = "class")
 
 lasso.test.error <- mean(pred.lasso != yTest)
-
-for(l in 10^seq(-1, 0, by = 0.01)){
-  
-  m <- glmnet(xTrain, yTrain, alpha = 1, family = "binomial", type.measure = "class", lambda = l)
-  
-  probs <- m %>% predict(newx = xVal)
-  pred <- probs > 0
-  
-  valError <- mean(pred != as.numeric(as.character(yVal)))
-  
-  print(paste("Validation Error", valError, "for lambda =", l))
-  
-}
-
 
 #Ridge
 ridge.model <- glmnet(xTrain, trainingData$Occupancy, family = "binomial", alpha = 0)
@@ -62,3 +84,12 @@ ridge.model <- glmnet(xTrain, trainingData$Occupancy, family = "binomial", alpha
 pred.ridge <- predict(ridge.model, xTest, type = "class")
 
 ridge.test.error <- mean(pred.ridge != testingData$Occupancy)
+
+
+data.frame(Kernel = c("Logit", "Boosting", "Lasso", "Ridge"),
+           TestAccuracy = c(1-logit.test.error, 1-boost.test.error, 1-lasso.test.error, 1-ridge.test.error)) %>% 
+          arrange(-TestAccuracy) %>%   
+  knitr::kable(caption = "Logistic Test Accuracies", digits = 5)
+
+
+
