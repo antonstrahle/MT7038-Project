@@ -30,20 +30,28 @@ library(ggpubr)
 library(readxl)
 library(scales)
 library(knitr)
-library(kableExtra)
 library(psych)
 library(kknn)
 library(grid)
 library(gridExtra)
 library(caret)
 
+d1 <- read.delim("../data/datatraining.txt", sep = ",")
+d2 <- read.delim("../data/datatest.txt", sep = ",")
+d3 <- read.delim("../data/datatest2.txt", sep = ",")
+
+occupancyData <- d1 %>% 
+  rbind(d2) %>% 
+  rbind(d3) %>% 
+  select(-date) %>% 
+  mutate(Occupancy = factor(Occupancy))
 sStats <- describeBy(occupancyData, occupancyData$Occupancy)
 
 sStats$`0` %>% 
-  kable(caption = "Unoccupied", digits = 3)
+  knitr::kable(caption = "Unoccupied", digits = 3)
 
 sStats$`1` %>% 
-  kable(caption = "Occupied", digits = 3)
+  knitr::kable(caption = "Occupied", digits = 3)
 
 ```
 
@@ -166,7 +174,7 @@ bestP <- pcDF %>%
   select(d, c) %>% 
   slice(1)
 
-mp <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", cost = bestPC$c, degree = bestP$d, coef0 = 1)
+mp <- svm(Occupancy ~ ., data = trainingData, kernel = "polynomial", cost = bestP$c, degree = bestP$d, coef0 = 1)
 
 predP <- predict(mp, testingData)
 
@@ -197,197 +205,17 @@ rCM <- confusionMatrix(predR, testingData$Occupancy)
 
 pCM <- confusionMatrix(predP, testingData$Occupancy)
 
-kable(lCM$table, caption = "Linear") %>%
-  kable_styling(full_width = FALSE, position = "float_left")
+kable(lCM$table, caption = "Linear") #%>%kable_styling(full_width = FALSE, position = "float_left")
 
-kable(rCM$table, caption = "Radial") %>%
-  kable_styling(full_width = FALSE, position = "float_left")
+kable(rCM$table, caption = "Radial") #%>%kable_styling(full_width = FALSE, position = "float_left")
 
-kable(pCM$table, caption = paste("Polynomial Degree", bestP$d)) %>%
-  kable_styling(full_width = FALSE, position = "left")
+kable(pCM$table, caption = paste("Polynomial Degree", bestP$d)) #%>%kable_styling(full_width = FALSE, position = "left")
 
 ```
 
 In all three models we seem to have proportionally fewer false negatives than we do false positives. This might be due to how the feature values change at the cutoff points (i.e. when the occupancy status changes). This would perhaps indicate that the change is more rapid when going from occupied to unoccupied than the other way around.  
 
 In all it seems that low cost SMVs, regardless of kernel, are a good tool when stability is of the utmost importance (at least when it comes to our data set).
-
-## Naive Bayes
-
-```{r}
-
-source("data.r")
-
-nbTrain <- trainingData
-nbTest <- testingData
-
-m <- naiveBayes(Occupancy ~ ., data = nbTrain)
-
-pred <- m %>% predict(testingData)
-
-testError <- mean(pred != testingData$Occupancy)
-
-```
-
-```{r}
-
-source("data.R")
-
-m <- glm(Occupancy ~., family="binomial", data= trainingData)
-
-probs <- m %>% predict(testingData)
-
-pred <- ifelse(probs > 0.5, 1, 0)
-
-testError <- mean(pred != testingData$Occupancy)
-
-```
-
-
-For the linear kernel we only resort to a coarse parameter search as it's performance did not come close to being able to match that of the polynomial or the radial kernel as can be seen in Figure X in the Appendix.
-
-For all kernels we encountered some computational difficulties (the optimizer did not converge within the iteration limit of the `e1071`) when examining higher costs or combinations of degrees and costs.
-
-For the polynomial kernel we did note an increase in the validation accuracy when increasing both the degree and the cost (although we could not examine higher costs/degrees due to the aforementioned computational issues) which can be seen in Figure X in the Appendix. 
-
-For the radial kernel we had similar findings as we did for the polynomial kernel. We achieved higher validation accuracies by increasing the cost (as can be seen in Figure X in the Appendix) which prompted us to once again disregard the finer part of the parameter search in order to simply examine higher costs.
-
-```{r echo = FALSE, message = FALSE, warning = FALSE}
-
-data.frame(Kernel = c("Linear", "Radial", paste("Polynomial Degree", bestP$D)),
-           Cost = c(bestLC, bestRC, bestP$C),
-           TestAccuracy = c(lAcc, rAcc, pAcc)) %>% 
-  kable(caption = "SVM Test Accuracies", digits = 3)
-
-```
-
-For all the kernels we seem to favor a very hard margin as is evident by the increased validation performance when increasing the cost. This leads us to believe that the data is not very noisy as such hard margins would otherwise perform catastrphically on new test data, which it does not.
-
-## KNN
-
-As noted previously the data seems to be quite non-linear and as KNN in a good non-linear classifier (*Paul 2017*). As noted when examining the SVMs in the previous section we seem to favor low bias classifiers due to an inherent lack of noise in our data set which should indicate that we want a smaller $k$. Furthermore as KNN scales well with data we should hopefully be able to achieve quite good results given the size of our training set (approximately 12000 observations).
-
-### Implementation
-
-Using the package `Class` and the function `knn` we do a parameter search using our validation set for a good $k$ on $(1,...,50)$. 
-
-```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
-
-set.seed(2021) #respecify seed to be able to run chunks alone
-
-source("knn.R")
-
-knnDF <- valKNN(seq(1, 400, by = 10))
-
-bestK <- knnDF %>% 
-  arrange(error) %>% 
-  select(k) %>% 
-  slice(1) %>% 
-  pull()
-
-k <- knn(trainingData[, !sapply(trainingData, is.factor)], testingData[, !sapply(testingData, is.factor)], 
-         cl = trainingData[,sapply(trainingData, is.factor)], k = bestK)
-
-kAcc <- mean(testingData[, sapply(testingData, is.factor)] == k)
-
-```
-
-The value of $k$ which generates the best validation accuracy turns out to be 1. As the best kNN classifier, which performs extremely well with a test accuracy of `r kAcc` is a 1-NN, this strongly indicates that our data is not very noisy at all (which we also noted when examining the SVMs). 
-
-A possible way to enhance the nearest neighbor model is through weighting (*Hastie et al. 2009*). A simple weighting scheme would be to weight the k nearest neighbors by their distance to the new point we want to classify, as such we give further emphasis to neighbors closer to the point which we wish to classify. 
-
-In order to implement this weighting scheme we use the `kknn` package and the included function with the same name which uses kernel-difference weighting. The package allows for the usage of many different kernels but the results that they produce do not differ enough to justify an inclusion of all of them. As such we use the *Gaussian* kernel as it is one which we've encountered before.  
-
-```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
-
-set.seed(2021) #respecify seed to be able to run chunks alone
-
-source("wknn.R")
-
-wknnDF <- valWKNN(seq(400, 600, by = 25))
-
-bestWK <- wknnDF %>% 
-  arrange(error) %>% 
-  select(k) %>% 
-  slice(1) %>% 
-  pull()
-
-wk <- kknn(Occupancy ~ ., train = trainingData, test = testingData, kernel = "gaussian", k = bestWK) 
-    
-wkAcc <- mean(testingData[, sapply(testingData, is.factor)] == wk$fitted.values)
-
-```
-
-When using a weighted `r bestWK`-NN we obtained a testing accuracy of `r wkAcc`. If we examine the parameter serach using the validation set in the Appendix we note that we essentially have the same validation error for a lot of different values of $k$. This is likely due to the fact that we have minutley observations that have the same occupancy status with equal, or very similar feature values which will lead to similar results for different values of $k$. In hindsight this similairity in the data set should imply that the usage of weighting is redundant as we would more often than not be weighting "identical" neighbors. 
-
-## Decions Trees
-
-Using decision trees is a good idea since we have non-linear data and a simple binary classification problem. 
-
-### Implementation
-
-```{r echo = FALSE, message = FALSE, warning = FALSE}
-formula <- Occupancy ~ .
-
-#Basic decision tree
-tree <- rpart(formula, data = trainingData, method = "class")
-treepred <- predict(tree, testingData, type = "class")
-testErrorTree <- mean(sqrt((as.numeric(as.character(treepred)) - as.numeric(as.character(testingData$Occupancy)))^2))
-
-```
-
-Constructing a simple decision tree resulted in a test accuracy of `r 1-testErrorTree`. This is can be further optimized by implementing bagging and boosting algorithms. 
-
-Bagging procedures draw a predetermined number of bootstrap samples each fitting a model. The models outputted predictions are averaged and gives the resulting bagged estimate for each observation. 
-
-Boosting procedures train the classifier by weighting each observation based on its classification, placing more weight on observations incorrectly classified. The next iteration of the procedure focuses more on those previously misclassified observations to better classify the training data.
-Using the package `ipred` for bagging and the package `adabag` for boosting we attained the following results.
-
-```{r echo = FALSE, message = FALSE, warning = FALSE}
-
-#Bagging
-bagged <- ipred::bagging(formula, data = trainingData, nbagg = 1000, coob = TRUE)
-#Out-of-bag error
-
-bagpred <- predict(bagged, newdata = testingData)
-
-testErrorBag <- mean(sqrt((as.numeric(as.character(bagpred)) - as.numeric(as.character(testingData$Occupancy)))^2))
-
-#Boosting
-#Boosting 1000 trees resulted in long computation time
-boosttree <- boosting(formula, data = trainingData, mfinal = 100)
-
-boostpred <- predict.boosting(boosttree, newdata = testingData)
-
-testErrorBoost <- boostpred$error
-
-data.frame(Method = c("Simple", "Bagging", "Boosting"),
-           'Test Accuracy' = c(1-testErrorTree, 1-testErrorBag, 1-testErrorBoost)) %>% 
-  kable(caption = "Decision Trees", digits = 3)
-
-```
-
-In the case of bagging we draw $1000$ bootstrap samples and in the case of boosting we iterate over $100$ trees. For boosting, iteration over $1000$ trees led to long computational time and did not change the result significantly. From Table 4 we can conclude that bagging resulted in higher Test Accuracy than boosting. Although bagging resulted in the highest Test Accuracy we loose the interpretability of the tree based structure, since a bagged tree no longer is a tree (*Hastie et al. 2009*). If interpretability is valued, the boosting procedure is worth considering despite the lower Test Accuracy.
-
-# Discussion
-
-The different methods which we've examined throughout this project yield the following results when each of them have been tuned (although to different degrees).
-
-```{r echo = FALSE, warning = FALSE, message = FALSE}
-
-data.frame(Method = c("Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM"),
-           'Accuracy' = c(1-testErrorBag, wkAcc, rAcc)) %>% 
-  arrange(desc(Accuracy)) %>% 
-  kable(caption = "Final Test Accuracies", digits = 3)
-
-data.frame(Method = c("Simple","Boosting","Bagging", paste0("Weighted ", bestWK, "-NN"), "Radial SVM","Linear SVM", paste("Polynomial SVM Degree", bestP$D)),
-           'Accuracy' = c(1-testErrorTree, 1-testErrorBoost,1-testErrorBag, wkAcc, rAcc, lAcc, pAcc)) %>% 
-  arrange(desc(Accuracy)) %>% 
-  kable(caption = "Final Test Accuracies", digits = 3)
-```
-
-Bagging decision trees resulted in the highest test accuracy, closely followed by the weighted `r bestWK`-NN.
-
 
 # Bibliography
 
@@ -407,21 +235,32 @@ Accurate occupancy detection of an office room from light, temperature, humidity
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 
 lcDF %>% 
-  ggplot(aes(x = k, y = error)) +
+  ggplot(aes(x = c, y = error)) +
   geom_line() +
   geom_point() +
+  scale_x_log10() +
   ylab("Error on Validation Set") +
-  xlab(expression(k)) +
-  ggtitle("KNN Tuning")
+  xlab(expression(c)) +
+  ggtitle("Linear SVM: Coarse-to-fine for C")
 
-wknnDF %>% 
-  ggplot(aes(x = k, y = error)) +
+rcDF %>% 
+  ggplot(aes(x = c, y = error)) +
   geom_line() +
   geom_point() +
+  scale_x_log10() +
   ylab("Error on Validation Set") +
-  xlab(expression(k)) +
-  ggtitle("Weighted-KNN Tuning")
+  xlab(expression(c)) +
+  ggtitle("Radial SVM: Coarse-to-fine for C")
 
+pcDF %>% 
+  ggplot(aes(x = c, y = error)) +
+  geom_line() +
+  geom_point() +
+  scale_x_log10() +
+  ylab("Error on Validation Set") +
+  xlab(expression(c)) +
+  ggtitle("Polynomial SVM: Coarse-to-fine for C") +
+  facet_wrap(~d)
 ```
 
 
