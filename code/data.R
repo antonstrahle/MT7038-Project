@@ -9,7 +9,7 @@ library(rpart.plot)
 #occupancy Dataset
 
 rawTrainingData <- read.delim("../data/datatraining.txt", sep = ",") %>% 
-  select(-date)%>% 
+  select(-date) %>% 
   mutate(Occupancy = factor(Occupancy)) %>% 
   select(-Light)
 
@@ -48,6 +48,9 @@ upsampling <- function(data){
   
 }
 
+upsampledTrainingData <- upsampling(rawTrainingData)
+upsampledValidationData <- upsampling(rawValidationData)
+
 standardizeData <- function(data, rawTrain = upsampledTrainingData){
   
   attr <- rawTrain[,!sapply(rawTrain, is.factor)]
@@ -61,7 +64,7 @@ standardizeData <- function(data, rawTrain = upsampledTrainingData){
 }
 
 #Standardized separately, should be the same mean and sd for all data
-trainingData <- upsampling(standardizeData(rawTrainingData))
-validationData <- standardizeData(rawValidationData)
+trainingData <- standardizeData(upsampledTrainingData)
+validationData <- standardizeData(upsampledValidationData)
 testingData <- standardizeData(rawTestingData)
 
