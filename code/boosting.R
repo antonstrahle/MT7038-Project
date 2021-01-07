@@ -80,7 +80,7 @@ lasso.test.error <- mean(pred.lasso != yTest)
 
 #Ridge
 
-valRidge <- function(sequence = 10^seq(-1, 0, by = 0.01)){
+valRidge <- function(sequence = 10^seq(-2, 0, by = 0.01)){
   j <- rep(list(c(NA,NA)), length(sequence))
   
   i <- 1
