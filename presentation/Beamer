@@ -129,6 +129,19 @@
 \end{frame}
 
 
+\begin{frame}{Methodology}{Logistic regression}
+    \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for classification and can be further optimized with \par 
+    \makebox[1.425cm]{} boosting algorithms and regularization\par
+    \medskip
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Regular GLM, Boosting, Lasso and Ridge \par
+    \makebox[1cm]{}  {\color{darkred}$\rhd$} Find optimal $\lambda$ manually using validation set
+	\begin{figure}
+		\includegraphics[width=0.5\linewidth]{logitAccuracies.png}
+		\caption{SVM Accuracies}
+	\end{figure}
+\end{frame}
+
+
 \begin{frame}{Discussion}
 TABLE OF ALL TREES AND IMORTANT THINGS FOUND EARLIER(MODEL TEST ACCURACIES)
 
