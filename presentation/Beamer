@@ -136,7 +136,15 @@
     \makebox[1.425cm]{} boosting algorithms and regularization\par
     \medskip
     \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Regular GLM, Boosting, Lasso and Ridge \par
+    \makebox[1cm]{}  {\color{darkred}$\rhd$} Boosting using the package \textbf{mboost} and the function  \par
+    \makebox[1.425cm]{} \textbf{glmboost} \par
+    \makebox[1cm]{}  {\color{darkred}$\rhd$} Lasso/Ridge using the package \textbf{glmnet} and the function  \par
+    \makebox[1.425cm]{} \textbf{glmnet} \par
     \makebox[1cm]{}  {\color{darkred}$\rhd$} Find optimal $\lambda$ manually using validation set
+
+\end{frame}
+
+\begin{frame}{Methodology}{Logistic regression}
 	\begin{figure}
 		\includegraphics[width=0.5\linewidth]{logitAccuracies.png}
 		\caption{Logistic Regression Accuracies}
@@ -146,22 +154,25 @@
 
 \begin{frame}{Discussion}
 
-
-
+\begin{minipage}{0.48\textwidth}
+		\begin{figure}
+			\includegraphics[width=\linewidth]{finalLightAccuracies.png}
+			\caption{Including Light}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.48\textwidth}
+		\begin{figure}
+			\includegraphics[width=\linewidth]{finalLightAccuracies.png}
+			\caption{Exluding Light}
+		\end{figure}
+	\end{minipage}
 \end{frame}
 
 \begin{frame}{Improvements}
 
-    \makebox[1cm]{}  {\color{darkred}$\rhd$} Good for classification and should generalize well with \par 
-    \makebox[1.425cm]{} low costs \par
-    \medskip
-    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Using the package \textbf{e1071} and the function \textbf{svm}\par
-    \makebox[1cm]{}  {\color{darkred}$\rhd$} Linear, polynomial and radial kernels\par
-    \makebox[1cm]{}   {\color{darkred}$\rhd$} Coarse-to-fine parameter search
-	\begin{figure}
-		\includegraphics[width=0.5\linewidth]{svmAccuracies.png}
-		\caption{SVM Accuracies}
-	\end{figure}
+    \makebox[1cm]{}  {\color{darkred}$\rhd$}  The methods explored\par 
+    \makebox[1cm]{}  {\color{darkred}$\rhd$}  Different ensample methods\par 
+    \makebox[1cm]{}  {\color{darkred}$\rhd$}  Further exploration of the missclassified points\par 
 \end{frame}
 
 \end{document}
