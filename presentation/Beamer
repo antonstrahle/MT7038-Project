@@ -162,7 +162,7 @@
 	\end{minipage}
 	\begin{minipage}{0.48\textwidth}
 		\begin{figure}
-			\includegraphics[width=\linewidth]{finalLightAccuracies.png}
+			\includegraphics[width=\linewidth]{finalNoLightAccuracies.png}
 			\caption{Exluding Light}
 		\end{figure}
 	\end{minipage}

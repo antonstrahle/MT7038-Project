@@ -255,7 +255,6 @@ data.frame(Method = c("Logit", "Boosting", "Lasso", "Ridge"),
            TestAccuracy = c(1-logit.test.error, 1-boost.test.error, 1-lasso.test.error, 1-ridge.test.error)) %>% 
           arrange(-TestAccuracy) %>%   
   kable(caption = "Logistic Regression Test Accuracies", digits = 5)
-
 ```
 
 The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly. 
