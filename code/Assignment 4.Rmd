@@ -257,7 +257,9 @@ data.frame(Method = c("Logit", "Boosting", "Lasso", "Ridge"),
   kable(caption = "Logistic Regression Test Accuracies", digits = 5)
 ```
 
-The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly. 
+The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly. This indicates that all features are important and that shrinking any of them negatively impacts classification.
+
+
 
 # Discussion
 
