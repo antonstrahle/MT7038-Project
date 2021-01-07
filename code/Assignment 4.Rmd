@@ -8,7 +8,7 @@ geometry: margin=2cm
 
 # Introduction
 
-This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification that allow for regualarization through parameter choices such as SVMs and Logistic Regression.
+This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification that allow for regularization through parameter choices such as SVMs and Logistic Regression.
 
 # Data
 
@@ -230,7 +230,7 @@ kable(cSVM, longtable =T, booktabs =T, caption ="Confusion Matrices") %>%
 
 In all three models we seem to have proportionally fewer false negatives than we do false positives. This might be due to how the feature values change at the cutoff points (i.e. when the occupancy status changes). This would perhaps indicate that the change is more rapid when going from occupied to unoccupied than the other way around.  
 
-In all it seems that low cost SMVs, regardless of kernel, are a good tool when stability is of the utmost importance (at least when it comes to our data set).
+In all it seems that low cost SVMs, regardless of kernel, are a good tool when stability is of the utmost importance (at least when it comes to our data set).
 
 ## Logistic Regression
 
@@ -242,7 +242,7 @@ We use the package `mboost` and the function `glmboost` with the adaboost algori
 
 Unless the complexity parameter $\lambda$ is specified the function `glmnet` finds the optimal $\lambda$ based on the training set given. In an attempt to make the regularized logistic regression generalize better we use the validation set to manually find the $\lambda$ which optimizes performance on the aforementioned set. The $\lambda$ values and their corresponding validation accuracies can be found in Figure 4 and 5 in the Appendix.
 
-Boosting algorithms weights observations based on classification, placing more weight on misclassified observations. For each iteration more focus is put on those observations previously missclassified. 
+Boosting algorithms weights observations based on classification, placing more weight on misclassified observations. For each iteration more focus is put on those observations previously misclassified. 
 
 As mentioned under "Methodology" most of our observations the room is unoccupied with no changes from one minute to the next. A minority of observations, centered around the time were the room becomes unoccupied, are the ones hard to classify. We implement boosting in order to put more focus on this minority of hard-to-classify observations, which hopefully increases the test accuracy. 
 
@@ -259,8 +259,6 @@ data.frame(Method = c("Logit", "Boosting", "Lasso", "Ridge"),
 
 The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly. This indicates that all features are important and that shrinking any of them negatively impacts classification.
 
-
-
 # Discussion
 
 When upsampling the minority class occupied to resolve the class imbalance in the data sets we saw a drastic increase in testing performance. Without the upsampling we achieved approximately $72\%$ accuracy for the linear SVM whilst we achieved $84\%$ with the upsampled training and validation data (other methods simply achieved an accuracy of about $65\%$ by classifying everything as unoccupied).
@@ -271,7 +269,7 @@ Although we have achieved decent classification accuracy we have to keep in mind
 
 There are numerous areas of improvements and other methods which we would have liked to examine. The upsampling that we perform had great impact on the performance of all our models. The method that we use is however very simple and there are several other, more sophisticated, ways of doing it which would likely lead to better training and performance.
 
-We would have liked to examine a few different ensemble methods as it seems intuitive that these would further help with generalization. Then again there are of course many other methods that can be tuned to generalize well which we have not examined, but perhaps would have liked to.
+There are of course many other methods that can be tuned to generalize well which we have not examined, but perhaps would have liked to.
 
 It would also be of interest to examine which data points that were actually misclassified (e.g. if it actually were the cutoffs points that have been mentioned a few times throughout this project) and if the performance on these points specifically could be improved.
 

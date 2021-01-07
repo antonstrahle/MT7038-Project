@@ -169,10 +169,10 @@
 \end{frame}
 
 \begin{frame}{Improvements}
-
-    \makebox[1cm]{}  {\color{darkred}$\rhd$}  The methods explored\par 
-    \makebox[1cm]{}  {\color{darkred}$\rhd$}  Different ensemble methods\par 
-    \makebox[1cm]{}  {\color{darkred}$\rhd$}  Further exploration of the missclassified points\par 
+	\begin{itemize}
+		\item The methods explored
+		\item Further exploration of the misclassified points
+	\end{itemize}
 \end{frame}
 
 \end{document}
