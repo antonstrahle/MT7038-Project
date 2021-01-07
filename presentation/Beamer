@@ -116,7 +116,8 @@
 \end{frame}
 
 \begin{frame}{Methodology}{SVM}
-    \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for classification and should generalize well with low costs.\par 
+    \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for classification and should generalize well with \par 
+    \makebox[1.425cm]{} low costs \par
     \medskip
     \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Using the package \textbf{e1071} and the function \textbf{svm}\par
     \makebox[1cm]{}  {\color{darkred}$\rhd$} Linear, polynomial and radial kernels\par
@@ -125,8 +126,6 @@
 		\includegraphics[width=0.5\linewidth]{svmAccuracies.png}
 		\caption{SVM Accuracies}
 	\end{figure}
-	\makebox[1cm]{Thoughts?} \quad {\color{darkred}$\rhd$} 
-	\makebox[4.255cm]{} lack of noise.
 \end{frame}
 
 
