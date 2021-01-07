@@ -228,14 +228,25 @@ In all three models we seem to have proportionally fewer false negatives than we
 
 In all it seems that low cost SMVs, regardless of kernel, are a good tool when stability is of the utmost importance (at least when it comes to our data set).
 
-\newpage
 ## Logistic Regression
 
 Logistic regression is a good choice for binary classification problems like this one. We also look at different forms of regularized logistic regression as well as boosting to hopefully achieve higher test accuracies.
 
 ### Implementation
 
-Using the package `mboost` and the function `glmboost` with the adaboost algorithm in order to boost the logistic regression model. For regularized logistic regression we look at both lasso and ridge regression using the package `glmnet` and the function `glmnet`. Implementing these algorithms gave the following results.
+Using the package `mboost` and the function `glmboost` with the adaboost algorithm in order to boost the logistic regression model. For regularized logistic regression we look at both lasso and ridge regression using the package `glmnet` and the function `glmnet`. 
+
+Unless the complexity parameter $\lambda$ is specified the function `glmnet` finds the optimal lambda based on the training set given. In an attempt to make the regularized logistic regression generalize better we use the validation set and manually find the $\lambda$ which optimizes performance. The $\lambda$ values looked at, compared to their resulting errors on the validation set is left in appendix. 
+
+Boosting algorithms weights observations based on classification, placing more weight on missclassified observations. For each iteration more focus is put on those observations previously missclassified. 
+
+As mentioned under "Methodology" most of our observations the room is unoccupied with no changes from one minute to the next. A minority of observations, centered around the time were the room becomes unoccupied, are the ones hard to classify. We implement boosting in order to put more focus on this minority of hard-to-classify observations, which hopefully increases the test accuracy. 
+
+
+
+Implementing these algorithms gave the following results.
+
+\newpage
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 source("boosting.R")
@@ -246,7 +257,8 @@ data.frame(Method = c("Logit", "Boosting", "Lasso", "Ridge"),
   kable(caption = "Logistic Regression Test Accuracies", digits = 5)
 
 ```
-The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly.
+
+The simple logistic regression with no extra algorithms implemented resulted in slightly higher test accuracy than both boosting and regularized logistic regression. The algorithms implemented failed to improve the test accuracy and in the case of ridge regression even lowered the test accuracy significantly. 
 
 # Discussion
 
@@ -261,6 +273,7 @@ There are numerous areas of improvements and other methods which we would have l
 We would have liked to exaimne a few different ensamble methods as it seems intuitive that these would further help with generalization. Then again there are of course many other methods that can be tuned to generalize well which we have not examined, but perhaps would have liked to.
 
 It would also be of interest to examine which data points that were actually misclassified (e.g. if it actually were the cutoffs points that have been mentioned a few times throughout this project) and if the performance on these points specifically could be improved.
+
 
 # Bibliography
 
