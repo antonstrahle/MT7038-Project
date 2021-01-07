@@ -8,15 +8,15 @@ geometry: margin=2cm
 
 # Introduction
 
-This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification such as SVMs, Logistic Regression and LDA.
+This is a project for the course MT7038 which was given during the fall of 2020. In the project we'll examine some basic methods for binary classification that allow for regualarization through parameter choices such as SVMs and Logistic Regression.
 
 # Data
 
-We picked the `Occupancy Detection` data set as we wanted to work with a binary classification problem as this would allow us to apply most of the methodologies discussed throughout the course. As there are quite a few different binary data sets at UCI we specifically chose our data set as it had a sizable number of instances as well as  few, but intuitively explanatory, features. The data set also poses an interesting question with how the features change over time and how this impacts classification.
+We picked the `Occupancy Detection` data set as we wanted to work with a binary classification problem as this would allow us to apply most of the methodologies discussed throughout the course. As there are quite a few different binary data sets at UCI we specifically chose our data set as it had a sizable number of instances as well as  few, but intuitively and explanatory, features. The data set also poses an interesting question with how the features change over time and how this impacts classification.
 
 ## Attributes
 
-The data `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of a few weeks. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air" by the contributors (and authors of *Candanedo et al. 2016*). 
+The `Occupancy Detection` data set includes snapshots of a specific room every minute throughout the course of a few weeks. The aim is to classify the current `Occupancy` of the room using the five features, `Temperature`, `CO2`, `Humidity`, `HumidityRatio` and `Light`, which are observed each minute. The first three features are quite self-explanatory but the two final ones could use some clarification. The `Light` in the room is the light intensity, measured in Lux whilst the `HumidityRatio` is vaguely described as a "derived quantity from temperature and relative humidity, in kgwater-vapor/kg-air" by the contributors (and authors of *Candanedo et al. 2016*). 
 
 ## Exploration
 
@@ -57,11 +57,13 @@ sStats$`1` %>%
 
 ```
 
-We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we initially wanted to make sure that our training, validation and testing sets reflected this inherent property of the data. However, as the data consists of minutely snapshots we have to make sure that each set consists of different time periods. The reason as to why we have to split the date into periods is that subsequent snapshots will very likely have the same feature values as well as occupancy status which would lead to a e.g. a 1-NN predicting with very higher accuracy accuracy (as almost identical data points would be present in both the training, validation and testing data), which is not really what we want. Due to the aforementioned issue with identical data points we will not be using cross validation and instead resort to using a specific validation set to evaluate any parameters.
+We have about four times more unoccupied than occupied minutes. As the data is observed around the clock it is of course natural that the room is unoccupied during a majority of the day. Due to this quite severe imbalance we initially wanted to make sure that our training, validation and testing sets reflected this inherent property of the data. However, as the data consists of minutely snapshots we have to make sure that each set consists of different, disjoint, time periods. The reason as to why we have to split the date into periods is that subsequent snapshots will very likely have the same feature values as well as occupancy status which would lead to a e.g. a 1-NN predicting with very higher accuracy accuracy (as almost identical data points would be present in both the training, validation and testing data), which is not really what we want. Due to the aforementioned issue with identical data points we will not be using cross validation and instead resort to using a dedicated validation set to evaluate any parameters.
 
-The class imbalance turned out to be a real issues since some classifiers simply classified the room as unoccupied at all times. As such we resorted to upsample both our training set in order to better allow for the learning of classification of both classes. Due to being outside the the scope of this project we simply generated observations of the minority class with replacement until we had an even split in the training data. In the end this proved to be a major success as we not only classified both classes but also improved the general performance of our models drastically.
+The class imbalance turned out to be a real issues since some classifiers simply classified the room as unoccupied at all times. As such we resorted to upsample our training set in order to better allow for the learning of classification of both classes. Due to being outside the the scope of this project we simply generated observations of the minority class with replacement until we had an even split in the training data. In the end this proved to be a major success as we not only classified both classes but also improved the general performance of our models drastically.
 
-We also standardize the data before upsampling as we will be using some non-scale invariant classifiers.
+We also standardize the data before upsampling as we will be using some classifiers that are not scale invariant.
+
+We now examine boxplots of the data for each of the two classes.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.width=13}
 
@@ -70,19 +72,21 @@ occupancyData %>%
   ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
   geom_boxplot() +
   facet_wrap(~Variable, scales = "free_y") +
-  theme(legend.position = "none") -> p1
+  theme(legend.position = "none") +
+  ggtitle("Regular") -> p1
 
 as.data.frame(occupancyData) %>%
   mutate_if(is.numeric, scale) %>% 
   gather(key = "Variable", value = "Value", -Occupancy) %>% 
   ggplot(aes(x = Occupancy, y = Value, color = Occupancy)) +
   geom_boxplot() +
-  facet_wrap(~Variable, scales = "free_y") -> p2
+  facet_wrap(~Variable, scales = "free_y") +
+  ggtitle("Standardized") -> p2
 
-grid.arrange(p1, p2, ncol = 2)
+grid.arrange(p1, p2, ncol = 2, top = textGrob("Figure 1: Boxplots",gp=gpar(fontsize=20,font=3)))
 ```
 
-As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights off when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the questions *Was the lights on or off?*.
+As can be seen in both the figure and the tables above the feature `Light` seems to to quite well in describing the current occupancy of the room. This is quite evident as people rarely gather in a room with the lights turned off, and (hopefully) turn the lights off when they leave. This features solely dominates the others when it comes to classification and is, at least according to us, quite boring. As such we'll choose to excluded it in order to actually be able to perform a somewhat comprehensive analysis that doesn't just include the question *Was the lights on or off?*.
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 
@@ -98,23 +102,23 @@ pairs(pData[,-5], col = scales::alpha(cols, 0.2), main = "Figure 2: Correlation 
 
 ```
 
-As we can see in the figure above the remaining features seem to behave quite nicely, although some could be considered to be somewhat correlated (e.g. `Humidity` and `CO2`). 
+As we can see in the figure above the remaining features seem to behave quite nicely, although some could be considered to be somewhat correlated (e.g. `Humidity` and `CO2` and obviously `HumidityRatio`). 
 
 # Methodology
 
 As we're dealing with a binary classification problem there are some different methods that we have decided to test out. We initially tested a variety of classifiers but quickly came to the conclusion that most generalized poorly in validation and testing scenarios. As such decided to focus on classifiers that we can tweak through validation such that they generalize well and perhaps ignore any slight differences between the different data sets (as previously mentioned the sets are a collection of snapshots from entirely different days so smaller differences are not unlikely). 
 
-Furthermore we also decided to change focus as we assumed that the data could not support a very complex decision boundary as the cutoffs (i.e. the minutes after the occupancy status changes) should be very difficult to classify. The feature values take time to change (i.e. the `CO2` does not go to zero the minute that the room becomes unoccupied and neither does it jump to normal levels (for an occupied room) exactly when people enter) which should make the minutes before and after occupancy difficult to distinguish from actual occupation.
+Furthermore we also decided to focus on regularization and generalization as we assumed that the cutoffs (i.e. the minutes after the occupancy status changes) would be very difficult to classify and as such we did not want a very specific classifier where these points would greatly impact the final classifier. The feature values take time to change (i.e. the `CO2` does not go to zero the minute that the room becomes unoccupied and neither does it jump to normal levels (for an occupied room) exactly when people enter) which should make the minutes before and after occupancy difficult to distinguish from actual occupation.
 
 Due to the aforementioned reasons we have resorted to some very simple classifiers that we think will generalize well. Those specifically being SVM and regularized Logistic Regression.
 
 ## SVM
 
-As support vector machines are good choices for classification it seems appropriate to apply the method to this problem. With a low cost $C$ we should be able to generalize well and thus achieve adequate testing accuracy. 
+As support vector machines are good choices for classification it seems appropriate to apply the method to this problem. With a low cost $C$ we should be able to generalize well and thus achieve adequate testing accuracy even if the testing set might differ slightly from the training set. 
 
 ### Implementation
 
-Using the package `e1071` and the function `svm` we implement a linear, polynomial and a radial SVM and use a coarse-to-fine search for a good value of $C$ using our aforementioned validation set. The results of this search can be found in Figure X, Y and Z in the Appendix.
+Using the package `e1071` and the function `svm` we implement a linear, polynomial and a radial SVM and use a coarse-to-fine search for a good value of $C$ using our aforementioned validation set. The results of this search can be found in Figure 1, 2 and 3 in the Appendix.
 
 ```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE, cache = TRUE}
 source("svm.R")
@@ -234,19 +238,15 @@ Logistic regression is a good choice for binary classification problems like thi
 
 ### Implementation
 
-Using the package `mboost` and the function `glmboost` with the adaboost algorithm in order to boost the logistic regression model. For regularized logistic regression we look at both lasso and ridge regression using the package `glmnet` and the function `glmnet`. 
+We use the package `mboost` and the function `glmboost` with the adaboost algorithm in order to boost the logistic regression model. For regularized logistic regression we look at both lasso and ridge regression using the package `glmnet` and the function `glmnet`. 
 
-Unless the complexity parameter $\lambda$ is specified the function `glmnet` finds the optimal lambda based on the training set given. In an attempt to make the regularized logistic regression generalize better we use the validation set and manually find the $\lambda$ which optimizes performance. The $\lambda$ values looked at, compared to their resulting errors on the validation set is left in appendix. 
+Unless the complexity parameter $\lambda$ is specified the function `glmnet` finds the optimal $\lambda$ based on the training set given. In an attempt to make the regularized logistic regression generalize better we use the validation set to manually find the $\lambda$ which optimizes performance on the aforementioned set. The $\lambda$ values and their corresponding validation accuracies can be found in Figure 4 and 5 in the Appendix.
 
-Boosting algorithms weights observations based on classification, placing more weight on missclassified observations. For each iteration more focus is put on those observations previously missclassified. 
+Boosting algorithms weights observations based on classification, placing more weight on misclassified observations. For each iteration more focus is put on those observations previously missclassified. 
 
 As mentioned under "Methodology" most of our observations the room is unoccupied with no changes from one minute to the next. A minority of observations, centered around the time were the room becomes unoccupied, are the ones hard to classify. We implement boosting in order to put more focus on this minority of hard-to-classify observations, which hopefully increases the test accuracy. 
 
-
-
 Implementing these algorithms gave the following results.
-
-\newpage
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 source("boosting.R")
@@ -270,10 +270,11 @@ Although we have achieved decent classification accuracy we have to keep in mind
 
 There are numerous areas of improvements and other methods which we would have liked to examine. The upsampling that we perform had great impact on the performance of all our models. The method that we use is however very simple and there are several other, more sophisticated, ways of doing it which would likely lead to better training and performance.
 
-We would have liked to exaimne a few different ensamble methods as it seems intuitive that these would further help with generalization. Then again there are of course many other methods that can be tuned to generalize well which we have not examined, but perhaps would have liked to.
+We would have liked to examine a few different ensemble methods as it seems intuitive that these would further help with generalization. Then again there are of course many other methods that can be tuned to generalize well which we have not examined, but perhaps would have liked to.
 
 It would also be of interest to examine which data points that were actually misclassified (e.g. if it actually were the cutoffs points that have been mentioned a few times throughout this project) and if the performance on these points specifically could be improved.
 
+\newpage
 
 # Bibliography
 
@@ -296,7 +297,7 @@ lcDF %>%
   scale_x_log10() +
   ylab("Error on Validation Set") +
   xlab(expression(c)) +
-  ggtitle("Linear SVM: Coarse-to-fine for C")
+  ggtitle("Figure 1: Linear SVM: Coarse-to-fine for C")
 
 rcDF %>% 
   ggplot(aes(x = c, y = error)) +
@@ -305,7 +306,7 @@ rcDF %>%
   scale_x_log10() +
   ylab("Error on Validation Set") +
   xlab(expression(c)) +
-  ggtitle("Radial SVM: Coarse-to-fine for C")
+  ggtitle("Figure 2: Radial SVM: Coarse-to-fine for C")
 
 pcDF %>% 
   ggplot(aes(x = c, y = error)) +
@@ -314,7 +315,7 @@ pcDF %>%
   scale_x_log10() +
   ylab("Error on Validation Set") +
   xlab(expression(c)) +
-  ggtitle("Polynomial SVM: Coarse-to-fine for C") +
+  ggtitle("Figure 3: Polynomial SVM: Coarse-to-fine for C") +
   facet_wrap(~d)
 
 lRidge %>% 
@@ -324,7 +325,7 @@ lRidge %>%
   scale_x_log10() +
   ylab("Error on Validation Set") +
   xlab(expression(lambda)) +
-  ggtitle("Ridge regression: Coarse for Lambda")
+  ggtitle("Figure 4: Ridge regression: Coarse for Lambda")
 
 lLasso %>% 
   ggplot(aes(x = l, y = error)) +
@@ -333,8 +334,10 @@ lLasso %>%
   scale_x_log10() +
   ylab("Error on Validation Set") +
   xlab(expression(lambda)) +
-  ggtitle("Lasso regression: Coarse for Lambda")
+  ggtitle("Figure 5: Lasso regression: Coarse for Lambda")
 ```
+
+\newpage
 
 ## Code
 
@@ -352,10 +355,22 @@ Includes the initial manipulation of the data.
 
 ```
 
+\newpage
+
 ### svm.r
 
 Includes the functions for validating different svm models.
 
 ```{r, code = readLines('svm.r'), eval = FALSE}
+
+```
+
+\newpage
+
+### boosting.r
+
+Includes the code for anything related to logistic regression.
+
+```{r, code = readLines('boosting.r'), eval = FALSE}
 
 ```
