@@ -60,38 +60,11 @@
 	~\\
 \end{frame}
 
-\begin{frame}{Data}
+\begin{frame}{Brief Exploration}
 	\begin{figure}
 		\includegraphics[width=\linewidth]{boxplot.png}
 		\caption{Boxplots of Features: Standardized and unstandardize}
 	\end{figure}
-\end{frame}
-
-\begin{frame}[noframenumbering]{Data}
-	The occupancy status of a room was observed for a few days. Snapshots of the  features below were taken every minute.
-	\begin{itemize}
-		\item Features
-			\SubItem{Temperature} 
-			\SubItem{CO2} 
-			\SubItem{Humidity} 
-			\SubItem{HumidityRatio } 
-			\SubItem{\st{Light}} 
-		\item Response
-			\SubItem{Occupancy}
-				\SubSubItem{Occupied} 
-				\SubSubItem{Unoccupied}
-	\end{itemize}
-	Light is excluded as the best classifier would otherwise become \textit{Are the lights on?}
-\end{frame}
-
-\begin{frame}{Brief Exploration}
-	\begin{figure}
-		\includegraphics[width=\linewidth]{pairs.png}
-		\caption{Pairplots of Features}
-	\end{figure}
-	\begin{itemize}
-		\item Non-linearity?
-	\end{itemize}
 \end{frame}
 
 \begin{frame}{Brief Exploration}
@@ -128,6 +101,35 @@
 	\end{figure}
 \end{frame}
 
+\begin{frame}{Methodology}{SVM}
+	\begin{minipage}{0.48\textwidth}
+		\begin{figure}
+			\includegraphics[width=\linewidth]{linearVal.png}
+			\caption{Linear}
+		\end{figure}
+	\end{minipage}
+	\begin{minipage}{0.48\textwidth}
+		\begin{figure}
+			\includegraphics[width=\linewidth]{polynomialVal.png}
+			\caption{Polynomial}
+		\end{figure}
+	\end{minipage}
+	\begin{figure}
+		\includegraphics[width=0.5\linewidth]{radialVal.png}
+		\caption{Radial}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Methodology}{SVM}
+	\begin{figure}
+		\includegraphics[width=0.5\linewidth]{confMatSVM.png}
+		\caption{Confusion Matrices}
+	\end{figure}
+	\begin{figure}
+		\includegraphics[width=0.5\linewidth]{svmAccuracies.png}
+		\caption{SVM Accuracies}
+	\end{figure}
+\end{frame}
 
 \begin{frame}{Methodology}{Logistic regression}
     \makebox[1cm]{Why?}  {\color{darkred}$\rhd$} Good for classification and can be further optimized with \par 
