@@ -111,7 +111,7 @@
 		\item SVM 
 		\SubItem{Linear, Radial \& Polynomial}
 		\item Logistic Regression
-		\SubItem{Regular \& Weighted}
+		\SubItem{Regular, Boosted \& Weighted}
 	\end{itemize}
 \end{frame}
 
@@ -137,14 +137,29 @@
     \makebox[1cm]{}  {\color{darkred}$\rhd$} Find optimal $\lambda$ manually using validation set
 	\begin{figure}
 		\includegraphics[width=0.5\linewidth]{logitAccuracies.png}
-		\caption{SVM Accuracies}
+		\caption{Logistic Regression Accuracies}
 	\end{figure}
 \end{frame}
 
 
 \begin{frame}{Discussion}
-TABLE OF ALL TREES AND IMORTANT THINGS FOUND EARLIER(MODEL TEST ACCURACIES)
 
+
+
+\end{frame}
+
+\begin{frame}{Improvements}
+
+    \makebox[1cm]{}  {\color{darkred}$\rhd$} Good for classification and should generalize well with \par 
+    \makebox[1.425cm]{} low costs \par
+    \medskip
+    \makebox[1cm]{How?}  {\color{darkred}$\rhd$} Using the package \textbf{e1071} and the function \textbf{svm}\par
+    \makebox[1cm]{}  {\color{darkred}$\rhd$} Linear, polynomial and radial kernels\par
+    \makebox[1cm]{}   {\color{darkred}$\rhd$} Coarse-to-fine parameter search
+	\begin{figure}
+		\includegraphics[width=0.5\linewidth]{svmAccuracies.png}
+		\caption{SVM Accuracies}
+	\end{figure}
 \end{frame}
 
 \end{document}
