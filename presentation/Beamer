@@ -171,7 +171,7 @@
 \begin{frame}{Improvements}
 
     \makebox[1cm]{}  {\color{darkred}$\rhd$}  The methods explored\par 
-    \makebox[1cm]{}  {\color{darkred}$\rhd$}  Different ensample methods\par 
+    \makebox[1cm]{}  {\color{darkred}$\rhd$}  Different ensemble methods\par 
     \makebox[1cm]{}  {\color{darkred}$\rhd$}  Further exploration of the missclassified points\par 
 \end{frame}
 
